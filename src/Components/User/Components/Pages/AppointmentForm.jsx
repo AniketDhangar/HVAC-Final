@@ -15,7 +15,7 @@ import {
   Stack,
 } from '@mui/material';
 import toast, { Toaster } from "react-hot-toast";
-import { useAuth } from '../../../Routes/AuthContext';
+
 import { useNavigate } from 'react-router-dom';
 
 
@@ -23,7 +23,7 @@ const serviceTypes = ["Repair", "Installation", "Service", "Other", "Maintenance
 
 const AppointmentForm = () => {
   const navigate = useNavigate()
-  const { user } = useAuth();
+
   
 
   const [formData, setFormData] = useState({

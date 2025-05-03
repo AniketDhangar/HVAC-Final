@@ -27,15 +27,25 @@ import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
 
 const drawerWidth = 280;
 
+// const menuItems = [
+//   { text: 'Home', icon: <HomeIcon />, path: 'home' },
+//   { text: 'About Us', icon: <InfoIcon />, path: 'about' },
+//   { text: 'Our Services', icon: <CleaningServicesIcon />, path: 'services' },
+//   { text: 'Our Blogs', icon: <BookTwoToneIcon />, path: 'blogs' },
+//   { text: 'Contact Us ', icon: <ContactMailIcon />, path: 'contact' },
+//   { text: 'Profile', icon: <ContactMailIcon />, path: 'profile' },
+
+
+// ];
+
+
 const menuItems = [
-  { text: 'Home', icon: <HomeIcon />, path: '/' },
-  { text: 'About Us', icon: <InfoIcon />, path: '/about' },
-  { text: 'Our Services', icon: <CleaningServicesIcon />, path: '/services' },
-  { text: 'Our Blogs', icon: <BookTwoToneIcon />, path: '/blogs' },
-  { text: 'Contact Us ', icon: <ContactMailIcon />, path: '/contact' },
-  { text: 'Profile', icon: <ContactMailIcon />, path: '/profile' },
-
-
+  { text: 'Home', icon: <HomeIcon />, path: '/user/home' },
+  { text: 'About Us', icon: <InfoIcon />, path: '/user/about' },
+  { text: 'Our Services', icon: <CleaningServicesIcon />, path: '/user/services' },
+  { text: 'Our Blogs', icon: <BookTwoToneIcon />, path: '/user/blogs' },
+  { text: 'Contact Us', icon: <ContactMailIcon />, path: '/user/contact' },
+  { text: 'Profile', icon: <ContactMailIcon />, path: '/user/profile' },
 ];
 
 function ResponsiveDrawer() {
@@ -57,7 +67,7 @@ function ResponsiveDrawer() {
   };
 
   const handleClick = () => {
-    navigate('/');
+    navigate('/user/home');
   };
 
   const drawer = (
@@ -135,11 +145,11 @@ function ResponsiveDrawer() {
           </IconButton>
           <Button
             variant="h1"
-          
+
             onClick={handleClick}
             sx={{
               flexGrow: 1,
-              alignSelf:'center',
+              alignSelf: 'center',
               fontWeight: 'bold',
               fontSize: '2rem',
               height: '100%',
@@ -181,7 +191,7 @@ function ResponsiveDrawer() {
                       ? theme.palette.primary.contrastText
                       // ? 'white' 
                       : 'white',
-                      // : theme.palette.primary.main,
+                    // : theme.palette.primary.main,
                   },
                   transition: 'all 0.3s ease-in-out',
                   fontWeight: location.pathname === item.path ? 'bold' : 'normal',

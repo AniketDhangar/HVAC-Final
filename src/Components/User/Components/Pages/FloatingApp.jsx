@@ -20,7 +20,7 @@ const FloatingApp = () => {
   const navigate = useNavigate();
 
   const handleAppointmentClick = () => {
-    navigate('/take-appointment');
+    navigate('take-appointment');
   };
 
   return (

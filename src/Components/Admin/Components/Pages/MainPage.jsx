@@ -11,9 +11,11 @@ import DesignServicesIcon from '@mui/icons-material/DesignServices';
 import ContactMailIcon from '@mui/icons-material/ContactMail';
 import { AppProvider } from '@toolpad/core/AppProvider';
 import { DashboardLayout } from '@toolpad/core/DashboardLayout';
-import AdminRoutes from '../../../Routes/AdminRoutes.jsx';
+
 import { Suspense } from 'react';
-import Loader from '../../../Routes/Loader.jsx';
+import Loader from '../../../Auth/Loader';
+import AdminRoutes from '../../../../Routing/AdminRoutes';
+
 
 export default function DashboardLayoutBasic({ window }) {
   const navigate = useNavigate();
@@ -59,10 +61,11 @@ export default function DashboardLayoutBasic({ window }) {
       window={window}
     >
       <DashboardLayout>
-      <Suspense fallback={<Loader/>}>
-            <Outlet />
+        <Suspense fallback={<Loader />}>
+          <Outlet />
+          {/* <AdminRoutes/> */}
         </Suspense>
-       
+
       </DashboardLayout>
     </AppProvider>
   );

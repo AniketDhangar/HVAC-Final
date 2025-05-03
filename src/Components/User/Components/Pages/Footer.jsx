@@ -4,7 +4,7 @@ import { styled } from '@mui/material/styles';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PhoneIcon from '@mui/icons-material/Phone';
 import EmailIcon from '@mui/icons-material/Email';
-import logo from '../../../assets/images/logo.png';
+import logo from '../../../../assets/images/logo.png';
 
 const StyledFooter = styled('footer')(({ theme }) => ({
   backgroundColor: '#1a1a1a',
