@@ -533,7 +533,7 @@ const servicesList = [
                 textTransform: 'none',
                 fontWeight: 500,
               }}
-              onClick={() => navigate('/appointments')}
+              onClick={() => navigate('/user/take-appointment')}
             >
               Book Now
             </Button>

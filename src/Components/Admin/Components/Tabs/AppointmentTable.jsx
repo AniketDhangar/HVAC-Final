@@ -1,205 +1,245 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Typography,
-  Box,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogActions,
-  Button,
-  DialogContent,
-  TextField,
-  MenuItem,
-  InputAdornment,
-  Select,
-  FormControl,
-  InputLabel,
+  Box, Table, TableBody, TableCell, TableContainer, TableHead,
+  TableRow, Paper, Typography, IconButton, Dialog, DialogTitle,
+  DialogContent, DialogActions, Button, TextField, MenuItem,
+  InputAdornment, FormControl, InputLabel, Select,
 } from "@mui/material";
 import toast, { Toaster } from "react-hot-toast";
-import { Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, Sort as SortIcon } from "@mui/icons-material";
+import {
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Search as SearchIcon,
+  Sort as SortIcon,
+} from "@mui/icons-material";
 
 const AppointmentTable = () => {
   const [appointments, setAppointments] = useState([]);
-  const [filteredAppointments, setFilteredAppointments] = useState([]);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [deleteDialog, setDeleteDialog] = useState(false);
-  const [selectedAppointment, setSelectedAppointment] = useState(null);
-  const [status, setStatus] = useState("");
+  const [filtered, setFiltered] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortField, setSortField] = useState("userName");
   const [sortDirection, setSortDirection] = useState("asc");
 
-  // Fetch Appointments
-  // useEffect(() => {
-  //   const fetchAppointments = async () => {
-  //     try {
-  //       const response = await axios.get("http://localhost:3000/getappoinment", {
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           Authorization: `Bearer ${localStorage.getItem("token")}`,
-            
-  //         },
-  //       });
-  //       setAppointments(response.data.appointments || []);
-  //       setFilteredAppointments(response.data.appointments || []);
-  //     } catch (error) {
-  //       toast.error("Failed to fetch appointments");
-  //       setAppointments([]);
-  //       setFilteredAppointments([]);
-  //     }
-  //   };
+  const [openDialog, setOpenDialog] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState(false);
+  const [selected, setSelected] = useState(null);
+  const [status, setStatus] = useState("");
 
-  //   fetchAppointments();
-  //   const intervalId = setInterval(fetchAppointments, 5000);
+  const token = localStorage.getItem("token");
+  if (!token) {
+    toast.error("No token found. Please log in.");
+    return null;
+  }
 
-  //   return () => clearInterval(intervalId);
-  // }, []);
+  // Fetch appointments once on mount
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          toast.error("No token found. Please log in.");
-          return;
-        }
-  
-        const response = await axios.get("http://localhost:3000/getappoinments", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-  
-        setAppointments(response.data.appointments || []);
-        setFilteredAppointments(response.data.appointments || []);
-        toast.success("Appointments fetched successfully!");
-      } catch (error) {
-        if (error.response && error.response.status === 401) {
+        const { data } = await axios.get(
+          "http://localhost:3000/getappoinments",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const list = data.appointments || [];
+        setAppointments(list);
+        setFiltered(list);
+      } catch (err) {
+        if (err.response?.status === 401) {
           toast.error("Session expired. Please log in again.");
           localStorage.removeItem("token");
           window.location.href = "/login";
         } else {
           toast.error("Failed to fetch appointments");
         }
-        setAppointments([]);
-        setFilteredAppointments([]);
       }
     };
-  
     fetchAppointments();
-  }, []); 
-  
-  // Handle Search
-  useEffect(() => {
-    let filtered = [...appointments];
+  }, [token]);
 
-    // Apply search filter
+  // Search, filter, sort logic
+  useEffect(() => {
+    let list = [...appointments];
+
     if (searchTerm) {
-      filtered = filtered.filter(app =>
-        app.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.userMobile?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.deviceBrand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.serviceType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.userAddress?.toLowerCase().includes(searchTerm.toLowerCase())
+      const term = searchTerm.toLowerCase();
+      list = list.filter(app =>
+        app.userId?.name.toLowerCase().includes(term) ||
+        app.userId?.email.toLowerCase().includes(term) ||
+        String(app.userId?.mobile).includes(term) ||
+        (app.deviceBrand || "").toLowerCase().includes(term) ||
+        (app.serviceType || "").toLowerCase().includes(term) ||
+        app.userId?.address.toLowerCase().includes(term)
       );
     }
 
-    // Apply status filter
     if (statusFilter !== "all") {
-      filtered = filtered.filter(app => app.appointmentStatus === statusFilter);
+      list = list.filter(app => app.appointmentStatus === statusFilter);
     }
 
-    // Apply sorting
-    filtered.sort((a, b) => {
-      const aValue = a[sortField]?.toLowerCase() || "";
-      const bValue = b[sortField]?.toLowerCase() || "";
-      return sortDirection === "asc"
-        ? aValue.localeCompare(bValue)
-        : bValue.localeCompare(aValue);
+    const getField = (app, field) => {
+      if (field === "userName") return app.userId?.name?.toLowerCase() || "";
+      if (field === "appointmentStatus") return (app.appointmentStatus || "").toLowerCase();
+      return "";
+    };
+
+    list.sort((a, b) => {
+      const aVal = getField(a, sortField);
+      const bVal = getField(b, sortField);
+      return sortDirection === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
     });
 
-    setFilteredAppointments(filtered);
+    setFiltered(list);
   }, [appointments, searchTerm, statusFilter, sortField, sortDirection]);
 
-  // Handle sort
-  const handleSort = (field) => {
+  const handleSort = field => {
     if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+      setSortDirection(prev => (prev === "asc" ? "desc" : "asc"));
     } else {
       setSortField(field);
       setSortDirection("asc");
     }
   };
 
-  // Open Update Dialog
-  const handleOpenDialog = (appointment) => {
-    setSelectedAppointment(appointment);
-    setStatus(appointment?.appointmentStatus || "Pending");
+  const openUpdate = app => {
+    setSelected(app);
+    setStatus(app.appointmentStatus || "Pending");
     setOpenDialog(true);
   };
-
-  // Close Update Dialog
-  const handleCloseDialog = () => {
+  const closeUpdate = () => {
     setOpenDialog(false);
-    setSelectedAppointment(null);
+    setSelected(null);
     setStatus("");
   };
 
-  // Open Delete Confirmation Dialog
-  const handleOpenDeleteDialog = (appointment) => {
-    setSelectedAppointment(appointment);
+  const openDelete = app => {
+    setSelected(app);
     setDeleteDialog(true);
   };
-
-  // Close Delete Dialog
-  const handleCloseDeleteDialog = () => {
+  const closeDelete = () => {
     setDeleteDialog(false);
-    setSelectedAppointment(null);
+    setSelected(null);
   };
 
-  // Update Appointment Status
+  // const handleUpdateStatus = async () => {
+  //   try {
+  //     await axios.put(
+  //       "http://localhost:3000/updateappointment",
+  //       { _id: selected._id, appointmentStatus: status },
+  //       { headers: { Authorization: `Bearer ${token}` } }
+  //     );
+  //     setAppointments(prev =>
+  //       prev.map(app =>
+  //         app._id === selected._id ? { ...app, appointmentStatus: status } : app
+  //       )
+  //     );
+  //     toast.success("Status updated");
+  //     closeUpdate();
+  //   } catch {
+  //     toast.error("Could not update status");
+  //   }
+  // };
   const handleUpdateStatus = async () => {
-    if (!selectedAppointment) return;
     try {
-      await axios.put(`http://localhost:3000/updateappointment`, {
-        _id: selectedAppointment._id,
-        appointmentStatus: status,
-      });
-      toast.success("Appointment status updated!");
-      setAppointments((prev) =>
-        prev.map((app) =>
-          app._id === selectedAppointment._id ? { ...app, appointmentStatus: status } : app
+      const userId = localStorage.getItem("userId");  // Example, replace with actual method to get user ID
+      console.log("Updating status for appointment:", selected._id,
+        "New status:", status);
+
+      const response = await axios.put(
+        "http://localhost:3000/updateappointment",
+        {
+          _id: selected._id,
+          appointmentStatus: status,
+          userId: userId   // Pass the user ID here
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setAppointments(prev =>
+        prev.map(app =>
+          app._id === selected._id ? { ...app, appointmentStatus: status } : app
         )
       );
-      handleCloseDialog();
-    } catch (error) {
-      toast.error("Failed to update status");
+      toast.success("Status updated");
+      closeUpdate();
+    } catch (err) {
+      console.error("Error updating status:", err);
+      toast.error("Could not update status");
     }
   };
 
-  // Delete Appointment
+  // const handleDeleteAppointment = async () => {
+  //   try {
+  //     const userId = localStorage.getItem("userId");
+  //     const token = localStorage.getItem("token"); 
+  //     const appointmentId = localStorage.getItem("appointmentId")
+  //     console.log("appointmentId is",appointmentId)
+  //     console.log("Deleting appointment with ID:", selected._id);
+  //     const response = await axios.put(
+  //       "http://localhost:3000/deleteappointment",
+  //       {
+  //         _id: selected._id,
+
+  //         userId: userId
+  //       },
+  //       { headers: { Authorization: `Bearer ${token}` } }
+  //     );
+
+  //     setAppointments(prev => prev.filter(app => app._id !== selected._id));
+  //     toast.success("Appointment deleted");
+  //     closeDelete();
+  //   } catch (error) {
+  //     console.log("Error deleting appointment:", error);
+  //     toast.error("Could not delete appointment");
+  //   }
+  // };
+
+  // const handleDeleteAppointment = async () => {
+  //   try {
+  //     const token = localStorage.getItem("token"); 
+  //     const appointmentId = selected._id;
+
+  //     console.log("Deleting appointment with ID:", appointmentId);
+
+  //     const response = await axios.delete(
+  //       "http://localhost:3000/deleteappointment",
+  //       { _id: appointmentId },
+  //       { headers: { Authorization: `Bearer ${token}` } }
+  //     );
+
+  //     setAppointments(prev => prev.filter(app => app._id !== appointmentId));
+  //     toast.success("Appointment deleted");
+  //     closeDelete();
+  //   } catch (error) {
+  //     console.log("Error deleting appointment:", error);
+  //     toast.error("Could not delete appointment");
+  //   }
+  // };
+
   const handleDeleteAppointment = async () => {
-    if (!selectedAppointment) return;
+    if (!selected) return;
+  
+    const userId = localStorage.getItem("userId");
+    const token = localStorage.getItem("token"); // Adjust the key if it's different
+  
     try {
-      await axios.delete(`http://localhost:3000/deleteappointment?_id=${selectedAppointment._id}`);
+      await axios.delete(`http://localhost:3000/deleteappointment`, {
+        params: {
+          _id: selected._id,
+          userId: userId,
+        },
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       toast.success("Appointment deleted!");
-      setAppointments(prev => prev.filter(app => app._id !== selectedAppointment._id));
-      handleCloseDeleteDialog();
+      // setSelected(prev => prev.filter(app => app._id !== selected._id));
+      closeDelete();
     } catch (error) {
+      console.log(error);
       toast.error("Failed to delete appointment");
     }
   };
-
+  
   return (
     <Box sx={{ p: 2 }}>
       <Toaster position="top-right" />
@@ -207,13 +247,11 @@ const AppointmentTable = () => {
         Appointment Requests
       </Typography>
 
-      {/* Search and Filter Section */}
-      <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+      <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
         <TextField
-          placeholder="Search appointments..."
+          placeholder="Search..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{ minWidth: 300 }}
+          onChange={e => setSearchTerm(e.target.value)}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -222,14 +260,14 @@ const AppointmentTable = () => {
             ),
           }}
         />
-        <FormControl sx={{ minWidth: 200 }}>
-          <InputLabel>Status Filter</InputLabel>
+        <FormControl>
+          <InputLabel>Status</InputLabel>
           <Select
             value={statusFilter}
-            label="Status Filter"
-            onChange={(e) => setStatusFilter(e.target.value)}
+            label="Status"
+            onChange={e => setStatusFilter(e.target.value)}
           >
-            <MenuItem value="all">All Status</MenuItem>
+            <MenuItem value="all">All</MenuItem>
             <MenuItem value="Pending">Pending</MenuItem>
             <MenuItem value="Approved">Approved</MenuItem>
             <MenuItem value="Completed">Completed</MenuItem>
@@ -241,56 +279,47 @@ const AppointmentTable = () => {
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
-            <TableRow sx={{ backgroundColor: "inherit" }}>
-              <TableCell><b>Sr. No</b></TableCell>
-              <TableCell>
-                <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => handleSort("userName")}>
-                  <b>Customer Name</b>
-                  <SortIcon sx={{ ml: 1 }} />
-                </Box>
+            <TableRow>
+              <TableCell>Sr. No</TableCell>
+              <TableCell onClick={() => handleSort("userName")} sx={{ cursor: "pointer" }}>
+                Customer <SortIcon fontSize="small" />
               </TableCell>
-              <TableCell><b>Contact</b></TableCell>
-              <TableCell><b>Email</b></TableCell>
-              <TableCell><b>Device Brand</b></TableCell>
-              <TableCell><b>Service Type</b></TableCell>
-              <TableCell>
-                <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => handleSort("appointmentStatus")}>
-                  <b>Status</b>
-                  <SortIcon sx={{ ml: 1 }} />
-                </Box>
+              <TableCell>Contact</TableCell>
+              <TableCell>Email</TableCell>
+              <TableCell>Brand</TableCell>
+              <TableCell>Service</TableCell>
+              <TableCell onClick={() => handleSort("appointmentStatus")} sx={{ cursor: "pointer" }}>
+                Status <SortIcon fontSize="small" />
               </TableCell>
-              <TableCell><b>Address</b></TableCell>
-              <TableCell><b>Message</b></TableCell>
-              <TableCell><b>Actions</b></TableCell>
+              <TableCell>Address</TableCell>
+              <TableCell>Message</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredAppointments.length === 0 ? (
+            {filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={10} align="center">
                   No appointments found.
                 </TableCell>
               </TableRow>
             ) : (
-              filteredAppointments.map((appointment, index) => (
-                <TableRow key={appointment._id}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>{appointment.userName || "N/A"}</TableCell>
-                  <TableCell>{appointment.userMobile || "N/A"}</TableCell>
-                  <TableCell>{appointment.userEmail || "N/A"}</TableCell>
-                  <TableCell>{appointment.deviceBrand || "N/A"}</TableCell>
-                  <TableCell>{appointment.serviceType || "N/A"}</TableCell>
-                  <TableCell>{appointment.appointmentStatus || "Pending"}</TableCell>
-                  <TableCell>{appointment.userAddress || "N/A"}</TableCell>
-                  <TableCell>{appointment.problemDescription || "N/A"}</TableCell>
-                  <TableCell sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                  }} align="center">
-                    <IconButton color="primary" onClick={() => handleOpenDialog(appointment)}>
+              filtered.map((app, i) => (
+                <TableRow key={app._id}>
+                  <TableCell>{i + 1}</TableCell>
+                  <TableCell>{app.userId?.name || "N/A"}</TableCell>
+                  <TableCell>{app.userId?.mobile}</TableCell>
+                  <TableCell>{app.userId?.email}</TableCell>
+                  <TableCell>{app.deviceBrand}</TableCell>
+                  <TableCell>{app.serviceType}</TableCell>
+                  <TableCell>{app.appointmentStatus}</TableCell>
+                  <TableCell>{app.userId?.address}</TableCell>
+                  <TableCell>{app.problemDescription}</TableCell>
+                  <TableCell>
+                    <IconButton onClick={() => openUpdate(app)}>
                       <EditIcon />
                     </IconButton>
-                    <IconButton color="error" onClick={() => handleOpenDeleteDialog(appointment)}>
+                    <IconButton onClick={() => openDelete(app)}>
                       <DeleteIcon />
                     </IconButton>
                   </TableCell>
@@ -301,39 +330,35 @@ const AppointmentTable = () => {
         </Table>
       </TableContainer>
 
-      {/* Update Status Dialog */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>Update Appointment Status</DialogTitle>
+      {/* Update Dialog */}
+      <Dialog open={openDialog} onClose={closeUpdate} fullWidth maxWidth="sm">
+        <DialogTitle>Update Status</DialogTitle>
         <DialogContent>
-          <TextField select fullWidth required margin="normal" value={status} onChange={(e) => setStatus(e.target.value)}>
-            <MenuItem value="Pending">Pending</MenuItem>
-            <MenuItem value="Approved">Approved</MenuItem>
-            <MenuItem value="Completed">Completed</MenuItem>
-            <MenuItem value="Cancelled">Cancelled</MenuItem>
-          </TextField>
-          <DialogActions sx={{ justifyContent: 'space-between' }}>
-          <Button onClick={handleCloseDialog}  sx={{ width:100 }}   color="error" variant="contained">Cancel</Button>
-          <Button onClick={handleUpdateStatus}  sx={{ width:100 }}  variant="contained" color="info">
-            Update
-          </Button>
-        </DialogActions>
-        </DialogContent>
-       
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialog} onClose={handleCloseDeleteDialog} maxWidth="xs" fullWidth>
-        <DialogTitle>Delete Appointment?</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete this appointment?
-          </Typography>
+          <FormControl fullWidth sx={{ mt: 2 }}>
+            <InputLabel>Status</InputLabel>
+            <Select
+              value={status}
+              label="Status"
+              onChange={e => setStatus(e.target.value)}
+            >
+              {["Pending", "Approved", "Completed", "Cancelled"].map(s => (
+                <MenuItem key={s} value={s}>{s}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDeleteDialog} color="error">Cancel</Button>
-          <Button onClick={handleDeleteAppointment} variant="contained" color="error">
-            Delete
-          </Button>
+          <Button onClick={closeUpdate} color="error">Cancel</Button>
+          <Button onClick={handleUpdateStatus} variant="contained">Update</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Dialog */}
+      <Dialog open={deleteDialog} onClose={closeDelete} fullWidth maxWidth="xs">
+        <DialogTitle>Delete Appointment?</DialogTitle>
+        <DialogActions>
+          <Button onClick={closeDelete} color="error">No</Button>
+          <Button onClick={handleDeleteAppointment} variant="contained" color="error">Yes</Button>
         </DialogActions>
       </Dialog>
     </Box>

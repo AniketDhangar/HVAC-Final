@@ -118,7 +118,7 @@ const Home = () => {
             variant="contained"
             endIcon={<ArrowForwardIcon />}
             sx={{ mb: 8 }}
-            onClick={() => navigate('/services')}
+            onClick={() => navigate('/user/services')}
           >
             VIEW SERVICES
           </StyledButton>

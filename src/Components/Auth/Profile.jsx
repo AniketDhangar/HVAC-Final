@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { logout } from '../Reduxwork/userSlice'; // ✅ Make sure the path is correct
+import { logout } from '../Reduxwork/userSlice'; 
 
 const Profile = () => {
   const dispatch = useDispatch();

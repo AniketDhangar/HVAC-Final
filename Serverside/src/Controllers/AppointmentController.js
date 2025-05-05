@@ -17,11 +17,11 @@ const createAppointment = async (req, res) => {
       return res.status(403).json({ message: "Only users can book appointments." });
     }
 
-    const { serviceId } = req.body;
+    // const { serviceId } = req.body;
 
-    if (!serviceId) {
-      return res.status(400).json({ message: "Service ID is required." });
-    }
+    // if (!serviceId) {
+    //   return res.status(400).json({ message: "Service ID is required." });
+    // }
 
     const user = await User.findById(loggedInUserId);
     if (!user) {
@@ -41,7 +41,7 @@ const createAppointment = async (req, res) => {
     res.status(201).json({ appointment });
   } catch (error) {
     console.log("Error:", error);
-    res.status(500).json({ message: "Something went wrong." });
+    res.status(500).json({ message: "Something went wrong.",error });
   }
 };
 
@@ -84,7 +84,7 @@ const assignWorkToEngineer = async (req, res) => {
     // Assign the engineer to the appointment
     const appointment = await Appointment.findByIdAndUpdate(
       appointmentId,
-      { assignedEngineer: engineer._id, appointmentStatus: "Assigned" }, // Fix here
+      { assignedEngineer: engineer._id, appointmentStatus: "Assigned" }, 
       { new: true }
     );
 
@@ -123,23 +123,69 @@ const getAppointments = async (req, res) => {
 };
 
 // Update appointment status
+// const updateAppointment = async (req, res) => {
+//   try {
+//     const { appointmentStatus, _id, userId } = req.body;
+//     if (!userId) {
+//       return res.status(400).json({ message: "User ID is required." });
+//     }
+
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found." });
+//     }
+
+//     if (user.role !== "admin" && user.role !== "engineer") {
+//       return res
+//         .status(403)
+//         .json({ message: "Only admins and engineers can update status." });
+//     }
+//     const appointment = await Appointment.findByIdAndUpdate(
+//       _id,
+//       { appointmentStatus },
+//       { new: true }
+//     );
+
+//     if (!appointment) {
+//       return res.status(404).json({ message: "Appointment not found" });
+//     }
+
+//     res
+//       .status(200)
+//       .json({ success: true, message: "Appointment updated!", appointment });
+//   } catch (error) {
+//     res.status(500).json({ message: "Something went wrong" });
+//   }
+// };
 const updateAppointment = async (req, res) => {
   try {
     const { appointmentStatus, _id, userId } = req.body;
+
+    // Ensure the userId is passed for authorization
     if (!userId) {
       return res.status(400).json({ message: "User ID is required." });
     }
 
+    // Fetch user for authorization check
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
 
+    // Only allow users with specific roles to update status
     if (user.role !== "admin" && user.role !== "engineer") {
       return res
         .status(403)
         .json({ message: "Only admins and engineers can update status." });
     }
+
+    // Validate appointment status
+    const validStatuses = ["Pending", "Approved", "Completed", "Cancelled"];
+    if (!validStatuses.includes(appointmentStatus)) {
+      return res.status(400).json({ message: "Invalid appointment status." });
+    }
+
+    // Update appointment
     const appointment = await Appointment.findByIdAndUpdate(
       _id,
       { appointmentStatus },
@@ -147,21 +193,57 @@ const updateAppointment = async (req, res) => {
     );
 
     if (!appointment) {
-      return res.status(404).json({ message: "Appointment not found" });
+      return res.status(404).json({ message: "Appointment not found." });
     }
 
     res
       .status(200)
       .json({ success: true, message: "Appointment updated!", appointment });
   } catch (error) {
-    res.status(500).json({ message: "Something went wrong" });
+    console.error(error);
+    res.status(500).json({ message: "Something went wrong during update." });
   }
 };
 
 
+
+// const deleteAppointment = async (req, res) => {
+//   try {
+//     const userId = req.body.userId; 
+//     const appointmentId = req.params.id; // Get from URL param
+//     const user = req.loggedUser; // Comes from authenticateToken middleware
+
+//     console.log("User ID:", user);
+//     console.log("Appointment ID:", appointmentId);
+
+//     // if (!user) {
+//     //   return res.status(401).json({ message: "User not authenticated." });
+//     // }
+
+//     // if (user.role !== "admin") {
+//     //   return res.status(403).json({ message: "Only admins can delete appointments." });
+//     // }
+
+//     if (!appointmentId) {
+//       return res.status(400).json({ message: "Appointment ID is required." });
+//     }
+
+//     const appointment = await Appointment.findByIdAndDelete(appointmentId);
+
+//     if (!appointment) {
+//       return res.status(404).json({ message: "Appointment not found." });
+//     }
+
+//     res.status(200).json({ message: "Appointment deleted successfully." });
+//   } catch (error) {
+//     console.error("Delete Error:", error);
+//     res.status(500).json({ message: "Something went wrong." });
+//   }
+// };
+
 const deleteAppointment = async (req, res) => {
   try {
-    const { _id, userId } = req.body;
+    const { _id, userId } = req.query;
     if (!userId) {
       return res.status(400).json({ message: "User ID is required." });
     }
@@ -193,6 +275,7 @@ const deleteAppointment = async (req, res) => {
     res.status(500).json({ message: "Something went wrong" });
   }
 };
+
 
 export {
   createAppointment,

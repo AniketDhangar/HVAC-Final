@@ -6,6 +6,12 @@ import AdminRoutes from './Routing/AdminRoutes';
 import UserRoutes from './Routing/UserRoutes';
 import EngineerRoutes from './Routing/EngineerRoutes';
 import { useSelector } from 'react-redux';
+import Home from './Components/User/Components/Pages/Home';
+import About from './Components/User/Components/Pages/About';
+import Contact from './Components/User/Components/Pages/Contact';
+import Blog from './Components/User/Components/Pages/Blog';
+import Services from './Components/User/Components/Pages/Services';
+import ResponsiveDrawer from './Components/Engineer/EngineerNavbar';
 
 const PrivateRoute = ({ children, allowedRoles }) => {
   const { isLoggedIn, userData } = useSelector((state) => state.user || {});
@@ -14,20 +20,27 @@ const PrivateRoute = ({ children, allowedRoles }) => {
   if (!isLoggedIn) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
-
+  console.log("userData", userData)
   if (!allowedRoles.includes(userData?.role)) {
     return <Navigate to="/unauthorized" replace />;
   }
 
   return children;
+  console.log("userData", userData)
 };
 
 const App = () => {
   return (
     <Routes>
+    
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      {/* <Route path="/user/home" element={<Home />} />
+      <Route path="/user/about" element={<About />} />
+      <Route path="/user/contact" element={<Contact />} />
+      <Route path="/user/blogs" element={<Blog />} />
+      <Route path="/user/services" element={<Services />} /> */}
 
       <Route
         path="/*"
@@ -51,7 +64,7 @@ const App = () => {
         path="/user/*"
         element={
           // <PrivateRoute allowedRoles={['user']}>
-            <UserRoutes />
+          <UserRoutes />
           // </PrivateRoute>
         }
       />

@@ -18,16 +18,22 @@ const UserSchema = new mongoose.Schema(
       required: [true, "Enter your password"],
     },
     mobile: {
-      type: Number,
+      type: String,  // Changed to String to preserve leading zeroes
       required: [true, "Enter your mobile"],
       trim: true,
       minlength: 10,
       maxlength: 10,
+      validate: {
+        validator: function (v) {
+          return /^[0-9]{10}$/.test(v);  // Regex for validating mobile number
+        },
+        message: props => `${props.value} is not a valid mobile number!`
+      }
     },
     role: {
       type: String,
       enum: ["admin", "user", "engineer"],
-      required: [true, "please choose your role."],
+      required: [true, "Please choose your role."],
     },
     address: {
       type: String,
@@ -53,5 +59,5 @@ const UserSchema = new mongoose.Schema(
   }
 );
 
-// ✅ Prevent OverwriteModelError
+// Prevent OverwriteModelError
 export const User = mongoose.models.User || mongoose.model("User", UserSchema);

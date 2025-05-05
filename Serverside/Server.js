@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import { connectDB } from "./src/Database/Database.js";
 import router from "./src/Routes/authRouter.js";
+import { authenticateToken } from "./src/middleware/Auth.js";
 
 const app = express();
 dotenv.config();
@@ -15,7 +16,13 @@ app.use(bodyParser.json());
 
 app.use(express.json());
 app.use(router);
-
+router.get("/me", authenticateToken, async (req, res) => {
+  try {
+    res.status(200).json({ user: req.loggedUser });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch user details." });
+  }
+});
 app.use("/Uploads", express.static("Uploads"));
 app.use(cookieParser());
 connectDB();

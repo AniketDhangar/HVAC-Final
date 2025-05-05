@@ -21,9 +21,20 @@ import {
   updateBlog,
   allBlogs,
 } from "../Controllers/BlogController.js";
-import { deleteUser, doLogin, getUsers, registerUser, updateUser } from "../Controllers/UserController.js";
+import {
+  deleteUser,
+  doLogin,
+  getUsers,
+  registerUser,
+  updateUser,
+} from "../Controllers/UserController.js";
 import { DashboardCollection } from "../Controllers/DashboardController.js";
-import {createContact,deleteContact,updateContact,getContacts  } from "../Controllers/ContactController.js";
+import {
+  createContact,
+  deleteContact,
+  updateContact,
+  getContacts,
+} from "../Controllers/ContactController.js";
 
 const router = express.Router();
 
@@ -34,13 +45,23 @@ router.post(
   createAppointment
 );
 router.get("/getappoinments", getAppointments);
-router.put("/updateappointment", updateAppointment);
-router.delete("/deleteappointment", deleteAppointment);
+router.put(
+  "/updateappointment",
+  authenticateToken,
+  authorizeRoles("admin"),
+  updateAppointment
+);
+router.delete(
+  "/deleteappointment",
+  authenticateToken,
+  authorizeRoles("admin"),
+  deleteAppointment
+);
 
 router.post(
   "/assign",
-  authenticateToken,
-  authorizeRoles("admin"),
+  // authenticateToken,
+  // authorizeRoles("admin"),
   assignWorkToEngineer
 );
 

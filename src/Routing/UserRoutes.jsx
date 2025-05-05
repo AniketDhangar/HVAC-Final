@@ -37,16 +37,16 @@ const UserRoutes = () => {
           element={
             <ProtectedRoute allowedRoles={['user']}>
               <AppointmentForm />
-            </ProtectedRoute>
+             </ProtectedRoute>
           }
         />
         {/* Optional: Protect profile route */}
         <Route
           path="profile"
           element={
-            <ProtectedRoute allowedRoles={['user']}>
+            // <ProtectedRoute allowedRoles={['user']}>
               <Profile />
-            </ProtectedRoute>
+            //  </ProtectedRoute> 
           }
         />
 
