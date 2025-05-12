@@ -13,7 +13,8 @@ import {
   Delete as DeleteIcon,
   Search as SearchIcon,
   Sort as SortIcon,
-  Assignment as AssignmentIcon
+  Assignment as AssignmentIcon,
+  Edit
 } from "@mui/icons-material";
 
 const AppointmentTable = () => {
@@ -176,9 +177,9 @@ const AppointmentTable = () => {
 
   const handleDeleteAppointment = async () => {
     if (!selected) return;
-  
+
     // Adjust the key if it's different
-  
+
     try {
       await axios.delete(`http://localhost:3000/deleteappointment`, {
         data: { _id: selected._id },
@@ -186,7 +187,7 @@ const AppointmentTable = () => {
           Authorization: `Bearer ${token}`
         }
       });
-     
+
       toast.success("Appointment deleted!");
       window.location.reload();
       closeDelete();
@@ -202,36 +203,36 @@ const AppointmentTable = () => {
   };
 
   // Update handleAssignSubmit to use the assignWorkToEngineer API
-const handleAssignSubmit = async () => {
-  if (!selectedEngineer) {
-    toast.error('Please select an engineer');
-    return;
-  }
+  const handleAssignSubmit = async () => {
+    if (!selectedEngineer) {
+      toast.error('Please select an engineer');
+      return;
+    }
 
-  console.log("Assigning task:", {
-    appointmentId: selectedAppointment?._id,
-    userId: selectedEngineer // Updated key to match backend expectation
-  }); // Debugging log
+    console.log("Assigning task:", {
+      appointmentId: selectedAppointment?._id,
+      userId: selectedEngineer // Updated key to match backend expectation
+    }); // Debugging log
 
-  try {
-    // Call the assignWorkToEngineer API
-    const response = await axios.post(
-      'http://localhost:3000/assign',
-      {
-        appointmentId: selectedAppointment?._id,
-        userId: selectedEngineer // Updated key to match backend expectation
-      },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    try {
+      // Call the assignWorkToEngineer API
+      const response = await axios.post(
+        'http://localhost:3000/assign',
+        {
+          appointmentId: selectedAppointment?._id,
+          userId: selectedEngineer // Updated key to match backend expectation
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-    console.log("Task assigned successfully:", response.data);
-    toast.success("Task assigned successfully!");
-    setAssignDialogOpen(false);
-  } catch (error) {
-    console.error('Error assigning task:', error);
-    toast.error('Failed to assign task');
-  }
-};
+      console.log("Task assigned successfully:", response.data);
+      toast.success("Task assigned successfully!");
+      setAssignDialogOpen(false);
+    } catch (error) {
+      console.error('Error assigning task:', error);
+      toast.error('Failed to assign task');
+    }
+  };
 
   return (
     <Box sx={{ p: 2 }}>
@@ -309,10 +310,10 @@ const handleAssignSubmit = async () => {
                   <TableCell>{app.userId?.address}</TableCell>
                   <TableCell>{app.problemDescription}</TableCell>
                   <TableCell>
-                    <IconButton onClick={() => openUpdate(app)}>
-                      <EditIcon />
+                    <IconButton title="Update Status"  color="primary"  onClick={() => openUpdate(app)}>
+                      <Edit />
                     </IconButton>
-                    <IconButton onClick={() => openDelete(app)}>
+                    <IconButton title="Delete"  color="error"  onClick={() => openDelete(app)}>
                       <DeleteIcon />
                     </IconButton>
                     <IconButton onClick={() => handleAssignClick(app)} color="primary">
@@ -350,17 +351,23 @@ const handleAssignSubmit = async () => {
       </Dialog>
 
       {/* Delete Dialog */}
-      <Dialog open={deleteDialog} onClose={closeDelete} fullWidth maxWidth="xs">
-        <DialogTitle>Delete Appointment?</DialogTitle>
+      <Dialog open={deleteDialog} onClose={closeDelete}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          Are you sure you want to delete this appointment?
+        </DialogContent>
         <DialogActions>
-          <Button onClick={closeDelete} color="error">No</Button>
-          <Button onClick={handleDeleteAppointment} variant="contained" color="error">Yes</Button>
+          <Button onClick={closeDelete}>Cancel</Button>
+          <Button variant="contained" color="error" onClick={handleDeleteAppointment}>
+            Delete
+          </Button>
         </DialogActions>
       </Dialog>
 
+
       {/* Assign Dialog */}
-      <Dialog 
-        open={assignDialogOpen} 
+      <Dialog
+        open={assignDialogOpen}
         onClose={() => setAssignDialogOpen(false)}
         maxWidth="md"
         fullWidth
@@ -376,7 +383,7 @@ const handleAssignSubmit = async () => {
               <Typography><strong>Service Type:</strong> {selectedAppointment.serviceType}</Typography>
               <Typography><strong>Device Brand:</strong> {selectedAppointment.deviceBrand}</Typography>
               <Typography><strong>Problem Description:</strong> {selectedAppointment.problemDescription}</Typography>
-              
+
               <FormControl fullWidth sx={{ mt: 3 }}>
                 <InputLabel>Select Engineer</InputLabel>
                 <Select
@@ -392,7 +399,7 @@ const handleAssignSubmit = async () => {
                   ) : engineers.length > 0 ? (
                     engineers.map((engineer) => (
                       <MenuItem key={engineer._id} value={engineer._id}>
-                        {engineer.name} 
+                        {engineer.name}
                       </MenuItem>
                     ))
                   ) : (

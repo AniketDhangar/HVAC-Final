@@ -39,22 +39,22 @@ app.use('/uploads', express.static(path.join(__dirname, 'Uploads')));
 app.use(router);
 
 // Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    message: 'Internal Server Error',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
-});
+// app.use((err, req, res, next) => {
+//   console.error(err.stack);
+//   res.status(500).json({
+//     success: false,
+//     message: 'Internal Server Error',
+//     error: process.env.NODE_ENV === 'development' ? err.message : undefined
+//   });
+// });
 
 // 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found'
-  });
-});
+// app.use((req, res) => {
+//   res.status(404).json({
+//     success: false,
+//     message: 'Route not found'
+//   });
+// });
 
 // User profile route
 router.get("/me", authenticateToken, async (req, res) => {

@@ -38,7 +38,8 @@ import {
 import {
   assignWorkToEngineer,
   getAppointmentsForEngineer,
-  getAppointmentByIdForEngineer
+  getAppointmentByIdForEngineer,
+  getEngineerTasks
 } from "../Controllers/TaskController.js";
 
 const router = express.Router();
@@ -126,6 +127,12 @@ router.get(
   authenticateToken,
   authorizeRoles("engineer"),
   getAppointmentByIdForEngineer
+);
+router.get(
+  "/getEngineerTasks",
+  authenticateToken,
+  authorizeRoles("admin"),
+  getEngineerTasks
 );
 router.post(
   "/assign",

@@ -8,36 +8,43 @@ import EngineerRoutes from './Routing/EngineerRoutes';
 import Unauthorized from './Components/Auth/Unauthorized';
 import PrivateRoute from './Routing/PrivateRoute';
 import NotFound from './Components/Auth/NotFound';
+import Loader from './Components/Auth/Loader';
 
-// Create ReloadContext
 export const ReloadContext = createContext();
 
 const App = () => {
   const [reloadTrigger, setReloadTrigger] = useState(false);
+  const [loading, setLoading] = useState(true); // Initially true
 
-  // Function to trigger reload
-  const triggerReload = () => {
-    console.log('Triggering project-wide reload');
-    setReloadTrigger(true);
-  };
+  // Simulate loading delay
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 1000); 
+    return () => clearTimeout(timer);
+  }, []);
 
-  // Effect to handle reload
   useEffect(() => {
     if (reloadTrigger) {
       window.location.reload();
     }
   }, [reloadTrigger]);
 
+  const triggerReload = () => {
+    console.log('Triggering project-wide reload');
+    setReloadTrigger(true);
+  };
+
+  if (loading) {
+    return <Loader message="Please wait while the app loads..." />;
+  }
+
   return (
     <ReloadContext.Provider value={{ triggerReload }}>
       <Routes>
-        {/* Public Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="/not-found" element={<NotFound />} />
 
-        {/* Protected Admin Routes */}
         <Route
           path="/main/*"
           element={
@@ -46,8 +53,6 @@ const App = () => {
             </PrivateRoute>
           }
         />
-
-        {/* Protected Engineer Routes */}
         <Route
           path="/engineer/*"
           element={
@@ -56,8 +61,6 @@ const App = () => {
             </PrivateRoute>
           }
         />
-
-        {/* Protected User Routes */}
         <Route
           path="/user/*"
           element={
@@ -67,10 +70,7 @@ const App = () => {
           }
         />
 
-        {/* Default route - redirect to login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
-
-        {/* Catch-all route - redirect to not found */}
         <Route path="*" element={<Navigate to="/not-found" replace />} />
       </Routes>
     </ReloadContext.Provider>

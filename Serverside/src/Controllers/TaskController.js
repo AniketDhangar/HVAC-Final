@@ -128,6 +128,51 @@ const getAppointmentByIdForEngineer = async (req, res) => {
 };
 
 
+
+const getEngineerTasks = async (req, res) => {
+  try {
+    console.log('getEngineerTasks - Request URL:', req.originalUrl);
+    const loggedInUserId = req.loggedUser?.id;
+    console.log('getEngineerTasks - loggedInUserId:', loggedInUserId);
+    if (!loggedInUserId) {
+      return res.status(401).json({ success: false, message: "Unauthorized." });
+    }
+    const admin = await User.findById(loggedInUserId);
+    console.log('Admin lookup:', admin ? { id: admin._id, role: admin.role } : null);
+    if (!admin || admin.role !== "admin") {
+      return res.status(403).json({ success: false, message: "Only admins can access this." });
+    }
+    const engineers = await User.find({ role: "engineer", isBlock: false })
+      .select("_id name")
+      .lean();
+    console.log('Engineers found:', engineers);
+    if (!engineers.length) {
+      return res.status(200).json({ success: true, tasks: [], message: "No engineers found." });
+    }
+    const engineerIds = engineers.map((eng) => new mongoose.Types.ObjectId(eng._id));
+    const tasks = await Appointment.find({
+      assignedEngineer: { $in: engineerIds },
+    })
+      .populate("userId")
+      .populate("assignedEngineer")
+      .populate("serviceId")
+      .sort({ createdAt: -1 })
+      .lean();
+    console.log('Tasks found:', tasks);
+    const tasksByEngineer = engineers.map((engineer) => ({
+      engineer: { _id: engineer._id, name: engineer.name },
+      tasks: tasks.filter((task) => task.assignedEngineer?._id.toString() === engineer._id.toString()),
+    }));
+    res.status(200).json({ success: true, tasks: tasksByEngineer });
+  } catch (error) {
+    console.error("Error fetching engineer tasks:", error);
+    res.status(500).json({ success: false, message: "Error fetching tasks", error: error.message });
+  }
+};
+
+
+
+
 // Update task status
 const updateAppointment = async (req, res) => {
   try {
@@ -177,4 +222,4 @@ const updateAppointment = async (req, res) => {
   }
 };
 
-export { assignWorkToEngineer, getAppointmentsForEngineer,getAppointmentByIdForEngineer };
+export { assignWorkToEngineer, getAppointmentsForEngineer,getAppointmentByIdForEngineer,getEngineerTasks };
