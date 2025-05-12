@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import {
   Container, TextField, Button, Typography, Alert, Paper,
-  CircularProgress, Box
+  CircularProgress, Box, InputAdornment, IconButton
 } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setUser } from "../Reduxwork/userslice";
@@ -11,48 +12,100 @@ import { setUser } from "../Reduxwork/userslice";
 const LoginForm = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [authStatus, setAuthStatus] = useState({ loading: false, errorMsg: '' });
+  const [showPassword, setShowPassword] = useState(false);
+  const [formErrors, setFormErrors] = useState({ email: '', password: '' });
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  const validateForm = () => {
+    const errors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!formData.email) {
+      errors.email = 'Email is required';
+    } else if (!emailRegex.test(formData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+
+    if (!formData.password) {
+      errors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleInputChange = ({ target: { name, value } }) => {
     setFormData((prev) => ({ ...prev, [name]: value.trim() }));
+    if (formErrors[name]) {
+      setFormErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     setAuthStatus({ loading: true, errorMsg: '' });
 
     try {
       const { data } = await axios.post("http://localhost:3000/login", formData);
+
+      if (!data.success) {
+        throw new Error(data.message || "Login failed");
+      }
+
       const { loggedUser } = data;
-      const token = loggedUser?.token;
-      console.log("this is login data",data)
-      console.log("this is loggedUser ",loggedUser)
+      const { accessToken, refreshToken } = loggedUser;
 
-      if (!token) throw new Error("Token not found");
+      if (!accessToken) {
+        throw new Error("Authentication failed: No token received");
+      }
 
-      localStorage.setItem("token", token);
+      // Store tokens
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
       localStorage.setItem("userId", loggedUser._id);
 
-      dispatch(setUser({ loggedUser, token }));
+      // Update Redux store with complete user data
+      dispatch(setUser({
+        loggedUser: {
+          ...loggedUser,
+          token: accessToken,
+          isLoggedIn: true
+        },
+        token: accessToken,
+        isLoggedIn: true
+      }));
 
+      console.log('Login successful, user data:', loggedUser);
+
+      // Navigate based on role
       switch (loggedUser.role) {
         case "admin":
           navigate("/main/dashboard", { replace: true });
           break;
         case "user":
-          navigate("/user/*", { replace: true });
+          navigate("/user/home", { replace: true });
+          break;
+        case "engineer":
+          navigate("/engineer/dashboard", { replace: true });
           break;
         default:
-          navigate("/engineer/profile", { replace: true });
+          navigate("/login", { replace: true });
       }
 
     } catch (err) {
-      console.log("Login error:", err);
+      console.error("Login error:", err);
       setAuthStatus({
         loading: false,
-        errorMsg: "Login failed. Please check your credentials.",
+        errorMsg: err.response?.data?.message || err.message || "Login failed. Please check your credentials.",
       });
     }
   };
@@ -71,44 +124,54 @@ const LoginForm = () => {
         )}
 
         <form onSubmit={handleFormSubmit}>
-          <Box display="flex" flexDirection="column" gap={2}>
-            <TextField
-              required
-              fullWidth
-              label="Email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-            />
-            <TextField
-              required
-              fullWidth
-              label="Password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleInputChange}
-            />
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              fullWidth
-              disabled={authStatus.loading}
-              sx={{ mt: 2 }}
-            >
-              {authStatus.loading ? <CircularProgress size={24} color="inherit" /> : 'Login'}
-            </Button>
+          <TextField
+            fullWidth
+            label="Email"
+            name="email"
+            value={formData.email}
+            onChange={handleInputChange}
+            error={!!formErrors.email}
+            helperText={formErrors.email}
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="Password"
+            name="password"
+            type={showPassword ? 'text' : 'password'}
+            value={formData.password}
+            onChange={handleInputChange}
+            error={!!formErrors.password}
+            helperText={formErrors.password}
+            margin="normal"
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            fullWidth
+            size="large"
+            sx={{ mt: 3 }}
+            disabled={authStatus.loading}
+          >
+            {authStatus.loading ? <CircularProgress size={24} /> : 'Login'}
+          </Button>
+          <Box sx={{mt:3}}>
+            <Typography sx={{mt:3}}>Wants to create an account ? <Button  onClick={() => navigate('/signup')}>Sign up</Button></Typography>
           </Box>
 
-          <Box mt={2}>
-            <Typography>
-              Don't have an account?
-              <Button variant="text" onClick={() => navigate('/signup')}>
-                Sign Up now
-              </Button>
-            </Typography>
-          </Box>
         </form>
       </Paper>
     </Container>

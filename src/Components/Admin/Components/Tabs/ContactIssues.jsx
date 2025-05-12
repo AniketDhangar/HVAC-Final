@@ -31,7 +31,7 @@ const ContactIssues = () => {
     useEffect(() => {
         const fetchContacts = async () => {
             try {
-                const token = localStorage.getItem("token"); // ✅ Ensure token is retrieved
+                const token = localStorage.getItem("accessToken"); // ✅ Ensure token is retrieved
                 if (!token) {
                     toast.error("Unauthorized: No token found!");
                     return;
@@ -49,7 +49,7 @@ const ContactIssues = () => {
                 setFilteredContacts(response.data.contacts || []);
                 toast.success("Fetched contacts successfully!");
             } catch (error) {
-                console.error(error);
+                console.log(error);
                 toast.error("Error fetching contacts!");
                 setContacts([]);
                 setFilteredContacts([]);

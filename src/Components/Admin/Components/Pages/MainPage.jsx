@@ -11,14 +11,21 @@ import DesignServicesIcon from '@mui/icons-material/DesignServices';
 import ContactMailIcon from '@mui/icons-material/ContactMail';
 import { AppProvider } from '@toolpad/core/AppProvider';
 import { DashboardLayout } from '@toolpad/core/DashboardLayout';
-
 import { Suspense } from 'react';
 import Loader from '../../../Auth/Loader';
-import AdminRoutes from '../../../../Routing/AdminRoutes';
-
+import { useSelector } from 'react-redux';
+import { selectUser } from '../../../../Components/Reduxwork/userslice';
 
 export default function DashboardLayoutBasic({ window }) {
   const navigate = useNavigate();
+  const user = useSelector(selectUser);
+
+  // Ensure user is admin
+  React.useEffect(() => {
+    if (!user || user.role !== 'admin') {
+      navigate('/unauthorized');
+    }
+  }, [user, navigate]);
 
   const NAVIGATION = [
     { kind: 'header', title: 'Menus' },
@@ -27,23 +34,10 @@ export default function DashboardLayoutBasic({ window }) {
     { segment: 'main/my-appointments', title: 'Appointments', icon: <EventNoteIcon /> },
     { segment: 'main/my-clients', title: 'Clients', icon: <Person2Icon /> },
     { segment: 'main/my-blogs', title: 'Blogs', icon: <ArticleIcon /> },
+    { segment: 'main/my-engineers', title: 'Engineers', icon: <ArticleIcon /> },
     { segment: 'main/my-contacts', title: 'Contacted Users', icon: <ContactMailIcon /> },
     { segment: 'main/my-profile', title: 'Profile', icon: <ContactMailIcon /> },
-    // {
-    //   segment: 'logout',
-    //   title: 'Logout',
-    //   icon: <LogoutIcon />,
-    //   action: (
-    //     <Button
-    //       sx={{ width: 50, alignSelf: 'center', justifySelf: 'center' }}
-    //       onClick={() => navigate('/login')}
-    //       variant="contained"
-    //       color="primary"
-    //     >
-    //       Logout
-    //     </Button>
-    //   ),
-    // },
+
   ];
 
   const demoTheme = extendTheme({
@@ -57,15 +51,13 @@ export default function DashboardLayoutBasic({ window }) {
     <AppProvider
       navigation={NAVIGATION}
       theme={demoTheme}
-      branding={{ title: 'HVAC Admin Panel', homeUrl: '/main/dashboard' }}
+      branding={{ title: 'HVAC Admin Panel', homeUrl: 'dashboard' }}
       window={window}
     >
       <DashboardLayout>
         <Suspense fallback={<Loader />}>
           <Outlet />
-          {/* <AdminRoutes/> */}
         </Suspense>
-
       </DashboardLayout>
     </AppProvider>
   );

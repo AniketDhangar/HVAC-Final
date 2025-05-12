@@ -7,7 +7,6 @@ import {
     People as PeopleIcon,
     CalendarToday as CalendarIcon,
     Build as BuildIcon,
-    TrendingUp as TrendingUpIcon,
     Refresh as RefreshIcon,
     MoreVert as MoreVertIcon
 } from '@mui/icons-material';
@@ -21,6 +20,7 @@ const COLORS = ['#4CAF50', '#2196F3', '#FFC107', '#F44336'];
 const Dashboard = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const [appointments, setAppointments] = useState([])
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({
@@ -34,202 +34,96 @@ const Dashboard = () => {
         }
     });
 
-    // const fetchDashboardData = async () => {
-    //     try {
-    //         setLoading(true);
-    //         console.log('Fetching dashboard data...');
-
-    //         // Fetch appointments
-    //         const appointmentsRes = await axios.get('http://localhost:3000/getappoinment');
-    //         console.log('Appointments response:', appointmentsRes.data);
-
-    //         // Fetch services
-    //         const servicesRes = await axios.get('http://localhost:3000/services');
-    //         console.log('Services response:', servicesRes.data);
-
-    //         // Fetch blogs
-    //         const blogsRes = await axios.get('http://localhost:3000/blogs');
-    //         console.log('Blogs response:', blogsRes.data);
-
-    //         // Extract data from responses
-    //         const appointments = appointmentsRes.data.appointments || [];
-    //         const services = servicesRes.data.allServices || [];
-    //         const blogs = blogsRes.data.blogs || [];
-
-    //         console.log('Raw data:', { appointments, services, blogs });
-
-    //         // Process appointment status
-    //         const statusCounts = {
-    //             Pending: 0,
-    //             Approved: 0,
-    //             Completed: 0,
-    //             Cancelled: 0
-    //         };
-
-    //         appointments.forEach(apt => {
-    //             const status = apt.appointmentStatus || 'Pending';
-    //             // Convert status to proper case format
-    //             const normalizedStatus = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
-    //             if (statusCounts.hasOwnProperty(normalizedStatus)) {
-    //                 statusCounts[normalizedStatus]++;
-    //             } else {
-    //                 console.log('Unknown status:', status);
-    //             }
-    //         });
-
-    //         console.log('Status counts:', statusCounts);
-
-    //         // Process service types
-    //         const serviceTypes = {};
-    //         services.forEach(service => {
-    //             const type = service.serviceType || 'Other';
-    //             serviceTypes[type] = (serviceTypes[type] || 0) + 1;
-    //         });
-
-    //         console.log('Service types:', serviceTypes);
-
-    //         // Get recent appointments
-    //         const recentAppointments = appointments
-    //             .sort((a, b) => {
-    //                 const dateA = new Date(a.createdAt || a.uploadedDate || Date.now());
-    //                 const dateB = new Date(b.createdAt || b.uploadedDate || Date.now());
-    //                 return dateB - dateA;
-    //             })
-    //             .slice(0, 5);
-
-    //         console.log('Recent appointments:', recentAppointments);
-
-    //         // Update state with processed data
-    //         setStats({
-    //             totalAppointments: appointments.length,
-    //             totalServices: services.length,
-    //             totalBlogs: blogs.length,
-    //             recentAppointments,
-    //             serviceTypes: Object.entries(serviceTypes).map(([name, value]) => ({ name, value })),
-    //             appointmentStatus: statusCounts
-    //         });
-
-    //         console.log('Final stats:', {
-    //             totalAppointments: appointments.length,
-    //             totalServices: services.length,
-    //             totalBlogs: blogs.length,
-    //             appointmentStatus: statusCounts,
-    //             serviceTypes: Object.entries(serviceTypes).map(([name, value]) => ({ name, value }))
-    //         });
-
-    //         toast.success('Dashboard data updated successfully');
-    //     } catch (error) {
-    //         console.error('Error fetching dashboard data:', error);
-    //         toast.error('Failed to fetch dashboard data: ' + (error.response?.data?.message || error.message));
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
-
-    // useEffect(() => {
-    //     fetchDashboardData();
-    // }, []);
-
-    // const handleRefresh = () => {
-    //     fetchDashboardData();
-    // };
-
-
     const fetchDashboardData = async () => {
         try {
-          setLoading(true);
-        //   console.log("Fetching dashboard data...");
-      
-          // Get auth token
-          const token = localStorage.getItem("token");
-          if (!token) {
-            toast.error("You need to log in first.");
-            return;
-          }
-      
-          const headers = {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          };
-      
-          // Fetch data in parallel
-          const [appointmentsRes, servicesRes, blogsRes] = await Promise.all([
-            axios.get("http://localhost:3000/getappoinments", { headers }),
-            axios.get("http://localhost:3000/servicesforadmin", { headers }),
-            axios.get("http://localhost:3000/blogsforadmin", { headers }),
-          ]);
-      
-          // Extract data
-          const appointments = appointmentsRes.data.appointments || [];
-          const services = servicesRes.data.allServices || [];
-          const blogs = blogsRes.data.blogs || [];
-      
-        //   console.log("Raw data:", { appointments, services, blogs });
-      
-          // Process appointment status
-          const statusCounts = appointments.reduce((acc, apt) => {
-            const status = apt.appointmentStatus || "Pending";
-            const normalizedStatus = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
-            acc[normalizedStatus] = (acc[normalizedStatus] || 0) + 1;
-            return acc;
-          }, { Pending: 0, Approved: 0, Completed: 0, Cancelled: 0 });
-      
-          // Process service types
-          const serviceTypes = services.reduce((acc, service) => {
-            const type = service.serviceType || "Other";
-            acc[type] = (acc[type] || 0) + 1;
-            return acc;
-          }, {});
-      
-          // Get recent appointments (latest 5)
-          const recentAppointments = appointments
-            .sort((a, b) => new Date(b.createdAt || b.uploadedDate || Date.now()) - new Date(a.createdAt || a.uploadedDate || Date.now()))
-            .slice(0, 5);
-      
-          // Update state with processed data
-          setStats({
-            totalAppointments: appointments.length,
-            totalServices: services.length,
-            totalBlogs: blogs.length,
-            recentAppointments,
-            serviceTypes: Object.entries(serviceTypes).map(([name, value]) => ({ name, value })),
-            appointmentStatus: statusCounts,
-          });
-      
-        //  console.log("Final stats:", {
-        //     totalAppointments: appointments.length,
-        //     totalServices: services.length,
-        //     totalBlogs: blogs.length,
-        //     appointmentStatus: statusCounts,
-        //     serviceTypes: Object.entries(serviceTypes).map(([name, value]) => ({ name, value })),
-        //   });
-      
-          toast.success("Dashboard data updated successfully");
-        } catch (error) {
-          if (error.response) {
-            if (error.response.status === 401) {
-              toast.error("Session expired. Please log in again.");
-              localStorage.removeItem("token");
-              window.location.href = "/login"; // Redirect to login
-            } else {
-              toast.error(error.response.data.message || "Error fetching dashboard data.");
+            setLoading(true);
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                toast.error('Please log in to access the dashboard.');
+                navigate('/login');
+                return;
             }
-          } else {
-            toast.error("Network error. Please check your connection.");
-          }
+
+            // Fetch all data from /dashboard
+            const response = await axios.get('http://localhost:3000/dashboard', {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            const { data } = await axios.get(
+                "http://localhost:3000/getappoinments",
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            const list = data.appointments || [];
+            setAppointments(list);
+            console.log("appointments", data.appointments)
+            console.log("user", data.appointments)
+            // console.log("appointments", data.appointments)
+            const { appointmentCount, serviceCount, blogsCount } = response.data.data;
+
+            // Process appointment status
+            const statusCounts = {
+                Pending: 0,
+                Approved: 0,
+                Completed: 0,
+                Cancelled: 0,
+            };
+
+            appointmentCount.forEach(apt => {
+                const status = (apt.appointmentStatus || 'Pending').charAt(0).toUpperCase() + (apt.appointmentStatus || 'Pending').slice(1).toLowerCase();
+                if (statusCounts.hasOwnProperty(status)) {
+                    statusCounts[status]++;
+                }
+            });
+
+            // Process service types
+            const serviceTypes = {};
+            serviceCount.forEach(service => {
+                const type = service.serviceType || 'Other';
+                serviceTypes[type] = (serviceTypes[type] || 0) + 1;
+            });
+
+            // Get recent appointments from appointmentCount
+            const recentAppointments = appointmentCount
+                .sort((a, b) => {
+                    const dateA = new Date(a.createdAt || a.uploadedDate || Date.now());
+                    const dateB = new Date(b.createdAt || b.uploadedDate || Date.now());
+                    return dateB - dateA;
+                })
+                .slice(0, 5);
+
+            // Update state
+            setStats({
+                totalAppointments: appointmentCount.length,
+                totalServices: serviceCount.length,
+                totalBlogs: blogsCount.length,
+                recentAppointments,
+                serviceTypes: Object.entries(serviceTypes).map(([name, value]) => ({ name, value })),
+                appointmentStatus: statusCounts,
+            });
+            console.log("recent", recentAppointments)
+
+            toast.success('Dashboard data updated successfully');
+        } catch (error) {
+            console.error('Error fetching dashboard data:', error);
+            if (error.response?.status === 401) {
+                toast.error('Session expired. Please log in again.');
+                localStorage.removeItem('accessToken');
+                navigate('/login');
+            } else {
+                toast.error('Failed to fetch dashboard data: ' + (error.response?.data?.message || error.message));
+            }
         } finally {
-          setLoading(false);
+            setLoading(false);
         }
-      };
-      
-      useEffect(() => {
+    };
+
+    useEffect(() => {
         fetchDashboardData();
-      }, []);
-      
-      const handleRefresh = () => {
+    }, []);
+
+    const handleRefresh = () => {
         fetchDashboardData();
-      };
-      
+    };
 
     if (loading) {
         return (
@@ -269,7 +163,7 @@ const Dashboard = () => {
                 <Grid item xs={12} sm={6} md={4}>
                     <StatCard
                         title="Active Services"
-                        data={stats.totalServices}
+                        value={stats.totalServices}
                         icon={<BuildIcon />}
                         color="#2e7d32"
                         onClick={() => navigate('/main/my-services')}
@@ -328,9 +222,9 @@ const Dashboard = () => {
                             <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
                                 Service Types Distribution
                             </Typography>
-                            {/* <IconButton size="small">
+                            <IconButton size="small">
                                 <MoreVertIcon />
-                            </IconButton> */}
+                            </IconButton>
                         </Box>
                         <ResponsiveContainer width="100%" height={300}>
                             <BarChart data={stats.serviceTypes}>
@@ -345,7 +239,7 @@ const Dashboard = () => {
                 </Grid>
 
                 {/* Recent Appointments */}
-                <Grid item xs={12}>
+                {/* <Grid item xs={12}>
                     <Paper sx={{ p: 3, borderRadius: 2, boxShadow: 3 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                             <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
@@ -368,11 +262,11 @@ const Dashboard = () => {
                                 <tbody>
                                     {stats.recentAppointments.map((appointment) => (
                                         <tr key={appointment._id} style={{ borderBottom: '1px solid #eee' }}>
-                                            <td style={{ padding: '12px' }}>{appointment.userName}</td>
-                                            <td style={{ padding: '12px' }}>{appointment.serviceType}</td>
+                                            <td style={{ padding: '12px' }}>{appointment.userId?.name || 'Unknown'}</td>
+                                            <td style={{ padding: '12px' }}>{appointment.serviceId?.serviceType || 'N/A'}</td>
                                             <td style={{ padding: '12px' }}>
                                                 <Chip
-                                                    label={appointment.appointmentStatus}
+                                                    label={appointment.appointmentStatus || 'Pending'}
                                                     color={
                                                         appointment.appointmentStatus === 'Completed' ? 'success' :
                                                             appointment.appointmentStatus === 'Pending' ? 'warning' :
@@ -382,7 +276,7 @@ const Dashboard = () => {
                                                 />
                                             </td>
                                             <td style={{ padding: '12px' }}>
-                                                {new Date(appointment.createdAt).toLocaleDateString()}
+                                                {new Date(appointment.createdAt || Date.now()).toLocaleDateString()}
                                             </td>
                                         </tr>
                                     ))}
@@ -390,7 +284,7 @@ const Dashboard = () => {
                             </table>
                         </Box>
                     </Paper>
-                </Grid>
+                </Grid> */}
             </Grid>
         </Box>
     );
@@ -428,5 +322,3 @@ const StatCard = ({ title, value, icon, color, onClick }) => (
 );
 
 export default Dashboard;
-
-

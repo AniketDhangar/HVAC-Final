@@ -1,6 +1,5 @@
 import express from "express";
 import {
-  assignWorkToEngineer,
   createAppointment,
   deleteAppointment,
   getAppointments,
@@ -24,6 +23,7 @@ import {
 import {
   deleteUser,
   doLogin,
+  getEngineers,
   getUsers,
   registerUser,
   updateUser,
@@ -35,6 +35,11 @@ import {
   updateContact,
   getContacts,
 } from "../Controllers/ContactController.js";
+import {
+  assignWorkToEngineer,
+  getAppointmentsForEngineer,
+  getAppointmentByIdForEngineer
+} from "../Controllers/TaskController.js";
 
 const router = express.Router();
 
@@ -48,7 +53,7 @@ router.get("/getappoinments", getAppointments);
 router.put(
   "/updateappointment",
   authenticateToken,
-  authorizeRoles("admin"),
+  authorizeRoles(["admin","engineer"]),
   updateAppointment
 );
 router.delete(
@@ -56,13 +61,6 @@ router.delete(
   authenticateToken,
   authorizeRoles("admin"),
   deleteAppointment
-);
-
-router.post(
-  "/assign",
-  // authenticateToken,
-  // authorizeRoles("admin"),
-  assignWorkToEngineer
 );
 
 // Services routes
@@ -82,7 +80,13 @@ router.post(
 );
 router.get("/blogs", allBlogs);
 router.get("/blogsforadmin", allBlogs);
-router.put("/updateblog", updateBlog);
+router.put(
+  "/updateblog",
+  authenticateToken,
+  authorizeRoles("admin"),
+  uploader.single("blogImage"),
+  updateBlog
+);
 router.delete("/deleteblog", deleteBlog);
 
 // Client User Routes
@@ -90,9 +94,15 @@ router.post("/register", registerUser);
 router.get("/users", getUsers);
 router.put("/users", updateUser);
 router.delete("/deleteuser", deleteUser);
+router.get(
+  "/getengineers",
+  authenticateToken,
+  authorizeRoles("admin"),
+  getEngineers
+);
 
 // Dashboard
-router.get("/", authenticateToken, DashboardCollection);
+router.get("/dashboard", authenticateToken, DashboardCollection);
 
 // Contacts
 router.post("/addcontacts", createContact);
@@ -103,5 +113,25 @@ router.put("/updatecontact", updateContact);
 // Auth routes
 
 router.post("/login", doLogin);
+
+// Engineer routes
+router.get(
+  "/engineer/appointments/:engineerId",
+  authenticateToken,
+  authorizeRoles("engineer"),
+  getAppointmentsForEngineer
+);
+router.get(
+  "/engineer/appointment/:id",
+  authenticateToken,
+  authorizeRoles("engineer"),
+  getAppointmentByIdForEngineer
+);
+router.post(
+  "/assign",
+  authenticateToken,
+  authorizeRoles("admin"),
+  assignWorkToEngineer
+);
 
 export default router;

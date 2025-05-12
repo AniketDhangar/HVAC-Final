@@ -1,77 +1,79 @@
-import React from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import React, { createContext, useEffect, useState } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from './Components/Auth/Login';
 import Signup from './Components/Auth/Signup';
 import AdminRoutes from './Routing/AdminRoutes';
 import UserRoutes from './Routing/UserRoutes';
 import EngineerRoutes from './Routing/EngineerRoutes';
-import { useSelector } from 'react-redux';
-import Home from './Components/User/Components/Pages/Home';
-import About from './Components/User/Components/Pages/About';
-import Contact from './Components/User/Components/Pages/Contact';
-import Blog from './Components/User/Components/Pages/Blog';
-import Services from './Components/User/Components/Pages/Services';
-import ResponsiveDrawer from './Components/Engineer/EngineerNavbar';
+import Unauthorized from './Components/Auth/Unauthorized';
+import PrivateRoute from './Routing/PrivateRoute';
+import NotFound from './Components/Auth/NotFound';
 
-const PrivateRoute = ({ children, allowedRoles }) => {
-  const { isLoggedIn, userData } = useSelector((state) => state.user || {});
-  const location = useLocation();
-
-  if (!isLoggedIn) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-  console.log("userData", userData)
-  if (!allowedRoles.includes(userData?.role)) {
-    return <Navigate to="/unauthorized" replace />;
-  }
-
-  return children;
-  console.log("userData", userData)
-};
+// Create ReloadContext
+export const ReloadContext = createContext();
 
 const App = () => {
+  const [reloadTrigger, setReloadTrigger] = useState(false);
+
+  // Function to trigger reload
+  const triggerReload = () => {
+    console.log('Triggering project-wide reload');
+    setReloadTrigger(true);
+  };
+
+  // Effect to handle reload
+  useEffect(() => {
+    if (reloadTrigger) {
+      window.location.reload();
+    }
+  }, [reloadTrigger]);
+
   return (
-    <Routes>
-    
-      <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
-      {/* <Route path="/user/home" element={<Home />} />
-      <Route path="/user/about" element={<About />} />
-      <Route path="/user/contact" element={<Contact />} />
-      <Route path="/user/blogs" element={<Blog />} />
-      <Route path="/user/services" element={<Services />} /> */}
+    <ReloadContext.Provider value={{ triggerReload }}>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route path="/not-found" element={<NotFound />} />
 
-      <Route
-        path="/*"
-        element={
-          <PrivateRoute allowedRoles={['admin']}>
-            <AdminRoutes />
-          </PrivateRoute>
-        }
-      />
+        {/* Protected Admin Routes */}
+        <Route
+          path="/main/*"
+          element={
+            <PrivateRoute allowedRoles={['admin']}>
+              <AdminRoutes />
+            </PrivateRoute>
+          }
+        />
 
-      <Route
-        path="/engineer/*"
-        element={
-          <PrivateRoute allowedRoles={['engineer']}>
-            <EngineerRoutes />
-          </PrivateRoute>
-        }
-      />
+        {/* Protected Engineer Routes */}
+        <Route
+          path="/engineer/*"
+          element={
+            <PrivateRoute allowedRoles={['engineer']}>
+              <EngineerRoutes />
+            </PrivateRoute>
+          }
+        />
 
-      <Route
-        path="/user/*"
-        element={
-          // <PrivateRoute allowedRoles={['user']}>
-          <UserRoutes />
-          // </PrivateRoute>
-        }
-      />
+        {/* Protected User Routes */}
+        <Route
+          path="/user/*"
+          element={
+            <PrivateRoute allowedRoles={['user']}>
+              <UserRoutes />
+            </PrivateRoute>
+          }
+        />
 
-      <Route path="/unauthorized" element={<h1>Unauthorized</h1>} />
-      <Route path="*" element={<h1>404 - Not Found</h1>} />
-    </Routes>
+        {/* Default route - redirect to login */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+
+        {/* Catch-all route - redirect to not found */}
+        <Route path="*" element={<Navigate to="/not-found" replace />} />
+      </Routes>
+    </ReloadContext.Provider>
   );
 };
 

@@ -7,15 +7,19 @@ const AppointmentSchema = new mongoose.Schema(
       ref: "User",
       required: [true, "User ID is required."],
     },
-    assignedEngineer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    assignedEngineer: { type: mongoose.Schema.ObjectId, ref: "User" },
+    assignedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", // admin who assigned the task
+    },
     deviceBrand: {
       type: String,
     },
     serviceId: {
       type: mongoose.Types.ObjectId,
-      ref: "Service"
+      ref: "Service",
     },
-   
+
     problemDescription: {
       type: String,
     },

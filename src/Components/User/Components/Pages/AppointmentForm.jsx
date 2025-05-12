@@ -1,98 +1,87 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
-  Box, Button, Container, TextField, Typography, Paper,
-  Grid, Stack
+  Box,
+  Button,
+  Container,
+  TextField,
+  Typography,
+  Paper,
+  Grid,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
+  Stack,
 } from '@mui/material';
 import toast, { Toaster } from "react-hot-toast";
-import { useNavigate } from 'react-router-dom';
 
 const AppointmentForm = () => {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     mobile: '',
     address: '',
+    serviceId: '',
     deviceBrand: '',
     problemDescription: '',
   });
 
+  const [services, setServices] = useState([]);
+
   useEffect(() => {
-    const fetchUserData = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        toast.error("You need to log in.");
-        navigate("/login");
-        return;
-      }
-
+    const fetchServices = async () => {
       try {
-        const res = await axios.get("http://localhost:3000/me", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const { name, email, mobile, address } = res.data.user;
-
-        setFormData(prev => ({
-          ...prev,
-          name,
-          email,
-          mobile,
-          address,
-        }));
-      } catch (error) {
-        toast.error("Failed to fetch user data.");
-        if (error.response?.status === 401) {
-          localStorage.removeItem("token");
-          navigate("/login");
-        }
+        const res = await axios.get("http://localhost:3000/services");
+        console.log("all services", res.data.allServices);
+        setServices(res.data.allServices || []);
+      } catch (err) {
+        toast.error("Failed to fetch services.");
+        console.log(err);
       }
     };
+    fetchServices();
+  }, []);
 
-    fetchUserData();
-  }, [navigate]);
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
 
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     if (!token) {
-      toast.error("Please log in.");
+      toast.error("Please login first.");
       return;
     }
 
     try {
-      await axios.post(
-        "http://localhost:3000/takeappoinment",
-        formData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await axios.post("http://localhost:3000/takeappoinment", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      toast.success("Appointment created successfully!");
-      setFormData(prev => ({
-        ...prev,
+      setFormData({
+        name: '',
+        email: '',
+        mobile: '',
+        address: '',
+        serviceId: '',
         deviceBrand: '',
         problemDescription: '',
-      }));
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Submission failed.");
-    }
-  };
+      });
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
+      toast.success("Appointment booked successfully!");
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to book appointment.");
+    }
   };
 
   return (
@@ -106,65 +95,90 @@ const AppointmentForm = () => {
           <Grid container spacing={3}>
             <Grid item xs={12} sm={6}>
               <TextField
+                required
+                fullWidth
                 label="Full Name"
                 name="name"
                 value={formData.name}
-                fullWidth
-                disabled
+                onChange={handleChange}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
+                required
+                fullWidth
                 label="Phone Number"
                 name="mobile"
                 value={formData.mobile}
-                fullWidth
-                disabled
+                onChange={handleChange}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
+                required
+                fullWidth
                 label="Email"
                 name="email"
+                type="email"
                 value={formData.email}
-                fullWidth
-                disabled
+                onChange={handleChange}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
+                fullWidth
                 label="Device Brand"
                 name="deviceBrand"
                 value={formData.deviceBrand}
                 onChange={handleChange}
-                fullWidth
               />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth required>
+                <InputLabel>Service</InputLabel>
+                <Select
+                  name="serviceId"
+                  value={formData.serviceId}
+                  onChange={handleChange}
+                  label="Service"
+                >
+                  {services.map((service) => (
+                    <MenuItem key={service._id} value={service._id}>
+                      {service.serviceName}
+                    </MenuItem>
+                  ))}
+                  <MenuItem value="other">Other</MenuItem>
+                </Select>
+              </FormControl>
             </Grid>
             <Grid item xs={12}>
               <TextField
+                required
+                fullWidth
                 label="Service Address"
                 name="address"
-                value={formData.address}
-                fullWidth
                 multiline
                 rows={2}
-                disabled
+                value={formData.address}
+                onChange={handleChange}
               />
             </Grid>
             <Grid item xs={12}>
               <TextField
+                fullWidth
                 label="Problem Description"
                 name="problemDescription"
-                value={formData.problemDescription}
-                onChange={handleChange}
-                fullWidth
                 multiline
                 rows={4}
+                value={formData.problemDescription}
+                onChange={handleChange}
+                placeholder="Please describe the issue you're experiencing with your AC..."
               />
             </Grid>
           </Grid>
+
           <Stack direction="row" spacing={2} sx={{ mt: 4 }}>
-            <Button type="submit" variant="contained" fullWidth sx={{ py: 1.5 }}>
+            <Button fullWidth type="submit" variant="contained" sx={{ py: 1.5 }}>
               Book Service
             </Button>
           </Stack>

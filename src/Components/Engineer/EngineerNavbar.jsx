@@ -40,10 +40,8 @@ const drawerWidth = 280;
 
 
 const menuItems = [
-  { text: 'My tasks', icon: <HomeIcon />, path: '/engineer/defaultpage' },
-  { text: 'My History', icon: <InfoIcon />, path: '/engineer/about' },
-  { text: 'My Users', icon: <CleaningServicesIcon />, path: '/engineer/services' },
- 
+  { text: 'Dashboard', icon: <HomeIcon />, path: '/engineer/dashboard' },
+  { text: 'My Appointments', icon: <CleaningServicesIcon />, path: '/engineer/appointments' },
   { text: 'Profile', icon: <ContactMailIcon />, path: '/engineer/profile' },
 ];
 
@@ -66,7 +64,7 @@ function ResponsiveDrawer() {
   };
 
   const handleClick = () => {
-    navigate('/engineer/defaultpage');
+    navigate('/engineer/dashboard');
   };
 
   const drawer = (

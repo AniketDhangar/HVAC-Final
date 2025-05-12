@@ -12,24 +12,34 @@ import {
   CircularProgress,
 } from '@mui/material';
 import axios from 'axios';
+import toast from 'react-hot-toast'; // Added toast for user-friendly error messages
 
 function EngineerDefaultPage() {
   const [incomingData, setIncomingData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Replace with your actual backend endpoint
-    axios.get('http://localhost:3000/getappoinments')
-      .then(response => {
-        setIncomingData(response.data);
-        setLoading(false);
-      })
-      .catch(error => {
+    const fetchAppointments = async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/getappoinments');
+        console.log('API Response:', response.data); // Debugging log
+
+        if (response.data && response.data.appointments) {
+          setIncomingData(response.data.appointments);
+        } else {
+          console.error('Unexpected API response structure:', response.data);
+          toast.error('Failed to load appointments. Please try again later.');
+        }
+      } catch (error) {
         console.error('Error fetching data:', error);
+        toast.error('Error fetching appointments. Please check your connection.');
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchAppointments();
   }, []);
-  console.log(incomingData)
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
@@ -39,7 +49,7 @@ function EngineerDefaultPage() {
 
       {loading ? (
         <CircularProgress />
-      ) : (
+      ) : incomingData.length > 0 ? (
         <TableContainer component={Paper}>
           <Table>
             <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
@@ -52,18 +62,22 @@ function EngineerDefaultPage() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {incomingData.appointments.map((item, index) => (
+              {incomingData.map((item, index) => (
                 <TableRow key={item._id || index}>
                   <TableCell>{item._id || index + 1}</TableCell>
-                  <TableCell>{item.name}</TableCell>
-                  <TableCell>{item.serviceType}</TableCell>
-                  <TableCell>{new Date(item.date).toLocaleDateString()}</TableCell>
-                  <TableCell>{item.status}</TableCell>
+                  <TableCell>{item.name || 'N/A'}</TableCell>
+                  <TableCell>{item.serviceType || 'N/A'}</TableCell>
+                  <TableCell>{item.date ? new Date(item.date).toLocaleDateString() : 'N/A'}</TableCell>
+                  <TableCell>{item.status || 'N/A'}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </TableContainer>
+      ) : (
+        <Typography variant="h6" color="textSecondary" align="center">
+          No appointments found.
+        </Typography>
       )}
     </Container>
   );

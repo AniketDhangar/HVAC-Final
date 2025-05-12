@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     Table,
     TableBody,
@@ -24,7 +24,7 @@ const UserTable = () => {
     const [appointments, setAppointments] = useState([]);
     const [filteredAppointments, setFilteredAppointments] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
-    const [sortField, setSortField] = useState("userName");
+    const [sortField, setSortField] = useState("name");
     const [sortDirection, setSortDirection] = useState("asc");
 
     // useEffect(() => {
@@ -49,23 +49,25 @@ const UserTable = () => {
     useEffect(() => {
         const fetchAppointments = async () => {
             try {
-                const token = localStorage.getItem("token"); // Get token if available
+                const token = localStorage.getItem("accessToken"); // Get token if available
 
                 const response = await axios.get("http://localhost:3000/getappoinments", {
                     headers: {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`,
-                      },
+                    },
                 });
 
-                // console.log(response.data.appointments);
+                console.log("usertable", response.data.appointments.userId);
                 setAppointments(response.data.appointments || []);
                 setFilteredAppointments(response.data.appointments || []);
+                console.log("filteredAppointments: ", filteredAppointments)
                 toast.success("Clients fetched successfully");
             } catch (error) {
-                toast.error("network error");
+                toast.error(error?.response?.data?.message || "Network error");
 
-                console.error(error);
+
+                console.log(error);
                 setAppointments([]);
                 setFilteredAppointments([]);
             }
@@ -76,31 +78,36 @@ const UserTable = () => {
 
 
 
-    useEffect(() => {
-        let filtered = [...appointments];
+    // useEffect(() => {
+    //     let filtered = [...appointments];
 
-        // Apply search filter
-        if (searchTerm) {
-            filtered = filtered.filter(client =>
-                client.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                client.userMobile?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                client.userEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                client.userAddress?.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-        }
+    //     // Apply search filter
+    //     if (searchTerm) {
+    //         filtered = filtered.filter(client =>
+    //             client.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    //             client.mobile?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    //             client.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    //             client.address?.toLowerCase().includes(searchTerm.toLowerCase())
+    //         );
+    //     }
 
-        // Apply sorting
-        filtered.sort((a, b) => {
-            const aValue = a[sortField]?.toLowerCase() || "";
-            const bValue = b[sortField]?.toLowerCase() || "";
-            return sortDirection === "asc"
-                ? aValue.localeCompare(bValue)
-                : bValue.localeCompare(aValue);
-        });
+    //     // Apply sorting
+    //     filtered.sort((a, b) => {
+    //         const aValue = a.userId?.[sortField]?.toLowerCase() || "";
+    //         const bValue = b.userId?.[sortField]?.toLowerCase() || "";
+    //         return sortDirection === "asc"
+    //             ? aValue.localeCompare(bValue)
+    //             : bValue.localeCompare(aValue);
+    //     });
 
-        setFilteredAppointments(filtered);
-    }, [appointments, searchTerm, sortField, sortDirection]);
-
+    //     setFilteredAppointments(filtered);
+    // }, [appointments, searchTerm, sortField, sortDirection]);
+    // filteredAppointments.forEach((appointment) => {
+    //     const user = appointment.userId;
+    //     console.log("Name:", user.name);
+    //     console.log("Email:", user.email);
+    //     console.log("Mobile:", user.mobile);
+    // });
     // Handle sort
     const handleSort = (field) => {
         if (sortField === field) {
@@ -110,6 +117,28 @@ const UserTable = () => {
             setSortDirection("asc");
         }
     };
+
+
+const sortedFilteredAppointments = useMemo(() => {
+    let filtered = [...appointments];
+    if (searchTerm) {
+        filtered = filtered.filter(client =>
+            client.userId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            client.userId?.mobile?.includes(searchTerm) ||
+            client.userId?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            client.userId?.address?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }
+
+    filtered.sort((a, b) => {
+        const aVal = a.userId?.[sortField]?.toLowerCase() || "";
+        const bVal = b.userId?.[sortField]?.toLowerCase() || "";
+        return sortDirection === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+    });
+
+    return filtered;
+}, [appointments, searchTerm, sortField, sortDirection]);
+
 
     return (
         <Box sx={{ p: 1, overflowX: 'auto' }}>
@@ -139,9 +168,9 @@ const UserTable = () => {
                         <TableRow sx={{ backgroundColor: 'inherit', width: '110%', color: 'inherit' }}>
                             <TableCell><strong>Sr. no</strong></TableCell>
                             <TableCell>
-                                <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => handleSort("userName")}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => handleSort("name")}>
                                     <strong>Name</strong>
-                                    {sortField === "userName" ? (
+                                    {sortField === "name" ? (
                                         sortDirection === "asc" ? (
                                             <Tooltip title="Sorting A to Z">
                                                 <ArrowUpwardIcon sx={{ ml: 1, fontSize: 20 }} />
@@ -159,9 +188,9 @@ const UserTable = () => {
                                 </Box>
                             </TableCell>
                             <TableCell>
-                                <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => handleSort("userMobile")}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => handleSort("mobile")}>
                                     <strong>Phone</strong>
-                                    {sortField === "userMobile" ? (
+                                    {sortField === "mobile" ? (
                                         sortDirection === "asc" ? (
                                             <Tooltip title="Sorting A to Z">
                                                 <ArrowUpwardIcon sx={{ ml: 1, fontSize: 20 }} />
@@ -179,9 +208,9 @@ const UserTable = () => {
                                 </Box>
                             </TableCell>
                             <TableCell>
-                                <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => handleSort("userEmail")}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => handleSort("email")}>
                                     <strong>Email</strong>
-                                    {sortField === "userEmail" ? (
+                                    {sortField === "email" ? (
                                         sortDirection === "asc" ? (
                                             <Tooltip title="Sorting A to Z">
                                                 <ArrowUpwardIcon sx={{ ml: 1, fontSize: 20 }} />
@@ -199,9 +228,9 @@ const UserTable = () => {
                                 </Box>
                             </TableCell>
                             <TableCell>
-                                <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => handleSort("userAddress")}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => handleSort("address")}>
                                     <strong>Address</strong>
-                                    {sortField === "userAddress" ? (
+                                    {sortField === "address" ? (
                                         sortDirection === "asc" ? (
                                             <Tooltip title="Sorting A to Z">
                                                 <ArrowUpwardIcon sx={{ ml: 1, fontSize: 20 }} />
@@ -222,28 +251,28 @@ const UserTable = () => {
                     </TableHead>
 
                     <TableBody>
-                        {filteredAppointments.length > 0 ? (
-                            filteredAppointments.map((client) => (
+                        {sortedFilteredAppointments.length > 0 ? (
+                            sortedFilteredAppointments.map((client) => (
                                 <TableRow
                                     key={client._id}
                                     sx={{
                                         '&:hover': { backgroundColor: 'gray' }
                                     }}
                                 >
-                                    <TableCell>{filteredAppointments.indexOf(client) + 1}</TableCell>
+                                    <TableCell>{sortedFilteredAppointments.indexOf(client) + 1}</TableCell>
                                     <TableCell>
-                                        <Typography variant="body1">
-                                            {client.userName?.toUpperCase()}
+                                        <Typography variant="body1">{console.log(client.name)}
+                                            {client.userId.name?.toUpperCase()}
                                         </Typography>
                                     </TableCell>
                                     <TableCell>
-                                        {client.userMobile}
+                                        {client.userId.mobile}
                                     </TableCell>
                                     <TableCell>
-                                        {client.userEmail || 'N/A'}
+                                        {client.userId.email || 'N/A'}
                                     </TableCell>
                                     <TableCell>
-                                        {client.userAddress || 'N/A'}
+                                        {client.userId.address || 'N/A'}
                                     </TableCell>
                                 </TableRow>
                             ))

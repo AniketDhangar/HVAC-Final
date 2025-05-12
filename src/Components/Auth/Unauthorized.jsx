@@ -1,26 +1,42 @@
 import React from 'react';
-import { Container, Typography, Box } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { Button, Container, Typography, Paper, Box } from '@mui/material';
+import HomeIcon from '@mui/icons-material/Home';
+import LockIcon from '@mui/icons-material/Lock';
 
-function Unauthorized() {
+const Unauthorized = () => {
+  const navigate = useNavigate();
+
   return (
     <Container maxWidth="sm">
-      <Box 
-        textAlign="center" 
-        mt={10} 
-        p={4} 
-        bgcolor="#ffe6e6" 
-        borderRadius={2}
-        boxShadow={3}
-      >
-        <Typography variant="h3" color="error" gutterBottom>
-          403 - Unauthorized
+      <Paper elevation={3} sx={{ p: 4, mt: 8, textAlign: 'center', borderRadius: 3 }}>
+        <LockIcon sx={{ fontSize: 60, color: 'error.main', mb: 2 }} />
+        <Typography variant="h4" gutterBottom>
+          Access Denied
         </Typography>
-        <Typography variant="body1" color="textSecondary">
-          You do not have permission to access this page.
+        <Typography variant="body1" color="text.secondary" paragraph>
+          You do not have permission to access this page. Please contact your administrator if you believe this is an error.
         </Typography>
-      </Box>
+        <Box mt={3} sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<HomeIcon />}
+            onClick={() => navigate('/')}
+          >
+            Go to Home
+          </Button>
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={() => navigate(-1)}
+          >
+            Go Back
+          </Button>
+        </Box>
+      </Paper>
     </Container>
   );
-}
+};
 
 export default Unauthorized;

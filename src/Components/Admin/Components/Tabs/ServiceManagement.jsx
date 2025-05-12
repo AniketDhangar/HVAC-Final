@@ -26,7 +26,7 @@ import {
   Fade,
   Tooltip,
 } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, ArrowUpward as ArrowUpwardIcon, ArrowDownward as ArrowDownwardIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, ArrowUpward as ArrowUpwardIcon, ArrowDownward as ArrowDownwardIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
 import axios from 'axios';
 import toast, { Toaster } from "react-hot-toast";
 
@@ -50,6 +50,8 @@ const ServiceManagement = () => {
     serviceDescription: "",
     serviceType: "",
   });
+  const [previewImage, setPreviewImage] = useState(null);
+  const [openPreview, setOpenPreview] = useState(false);
 
   // Fetch services on mount
   useEffect(() => {
@@ -253,6 +255,20 @@ const ServiceManagement = () => {
     }
   };
 
+  const handlePreviewImage = (imageUrl) => {
+    // Convert relative path to full URL
+    const fullImageUrl = imageUrl.startsWith('http') 
+      ? imageUrl 
+      : `http://localhost:3000/${imageUrl.replace(/\\/g, '/')}`;
+    setPreviewImage(fullImageUrl);
+    setOpenPreview(true);
+  };
+
+  const handleClosePreview = () => {
+    setOpenPreview(false);
+    setPreviewImage(null);
+  };
+
   return (
     <Paper sx={{ p: 2, m: 2, mt: 3, boxShadow: 3, borderRadius: 2 }}>
       <Toaster position="top-right" />
@@ -342,6 +358,7 @@ const ServiceManagement = () => {
                 </Box>
               </TableCell>
               <TableCell sx={{ fontWeight: 'bold' }}>Description</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Image</TableCell>
               <TableCell sx={{ fontWeight: 'bold' }} align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -352,6 +369,17 @@ const ServiceManagement = () => {
                 <TableCell>{service.serviceName}</TableCell>
                 <TableCell>{service.serviceType}</TableCell>
                 <TableCell>{service.serviceDescription}</TableCell>
+                <TableCell>
+                  {service.serviceImage && (
+                    <IconButton 
+                      color="primary" 
+                      onClick={() => handlePreviewImage(service.serviceImage)}
+                      size="small"
+                    >
+                      <VisibilityIcon />
+                    </IconButton>
+                  )}
+                </TableCell>
                 <TableCell align="center">
                   <IconButton color="primary" onClick={() => handleOpenDialog(service)}>
                     <EditIcon />
@@ -518,6 +546,34 @@ const ServiceManagement = () => {
           </DialogActions>
         </DialogContent>
 
+      </Dialog>
+
+      {/* Image Preview Dialog */}
+      <Dialog 
+        open={openPreview} 
+        onClose={handleClosePreview}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Service Image Preview</DialogTitle>
+        <DialogContent>
+          {previewImage && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+              <img 
+                src={previewImage} 
+                alt="Service Preview" 
+                style={{ 
+                  maxWidth: '100%', 
+                  maxHeight: '70vh', 
+                  objectFit: 'contain' 
+                }} 
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClosePreview}>Close</Button>
+        </DialogActions>
       </Dialog>
     </Paper>
   );

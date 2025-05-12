@@ -5,6 +5,7 @@ import {
   TableRow, Paper, Typography, IconButton, Dialog, DialogTitle,
   DialogContent, DialogActions, Button, TextField, MenuItem,
   InputAdornment, FormControl, InputLabel, Select,
+  CircularProgress
 } from "@mui/material";
 import toast, { Toaster } from "react-hot-toast";
 import {
@@ -12,6 +13,7 @@ import {
   Delete as DeleteIcon,
   Search as SearchIcon,
   Sort as SortIcon,
+  Assignment as AssignmentIcon
 } from "@mui/icons-material";
 
 const AppointmentTable = () => {
@@ -21,22 +23,28 @@ const AppointmentTable = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortField, setSortField] = useState("userName");
   const [sortDirection, setSortDirection] = useState("asc");
-
   const [openDialog, setOpenDialog] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [selected, setSelected] = useState(null);
   const [status, setStatus] = useState("");
+  const [engineers, setEngineers] = useState([]);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [selectedEngineer, setSelectedEngineer] = useState('');
+  const [engineersLoading, setEngineersLoading] = useState(true);
 
-  const token = localStorage.getItem("token");
+  const userId = localStorage.getItem("userId");
+  const token = localStorage.getItem("accessToken");
   if (!token) {
     toast.error("No token found. Please log in.");
     return null;
   }
 
-  // Fetch appointments once on mount
+  // Fetch appointments and engineers on mount
   useEffect(() => {
-    const fetchAppointments = async () => {
+    const fetchData = async () => {
       try {
+        // Fetch appointments
         const { data } = await axios.get(
           "http://localhost:3000/getappoinments",
           { headers: { Authorization: `Bearer ${token}` } }
@@ -44,17 +52,34 @@ const AppointmentTable = () => {
         const list = data.appointments || [];
         setAppointments(list);
         setFiltered(list);
-      } catch (err) {
-        if (err.response?.status === 401) {
+
+        // Fetch engineers
+        const engineersResponse = await axios.get(
+          "http://localhost:3000/getengineers",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        console.log("Engineers API response:", engineersResponse.data); // Debugging log
+
+        // Filter active engineers
+        const activeEngineers = engineersResponse.data.engineers.filter(engineer => !engineer.isBlock);
+        console.log("Active engineers:", activeEngineers); // Debugging log
+
+        setEngineers(activeEngineers);
+        setEngineersLoading(false);
+      } catch (error) {
+        console.error("Error fetching data:", error); // Fixed syntax issue
+        if (error.response?.status === 401) {
           toast.error("Session expired. Please log in again.");
-          localStorage.removeItem("token");
+          localStorage.removeItem("accessToken");
           window.location.href = "/login";
         } else {
-          toast.error("Failed to fetch appointments");
+          toast.error("Failed to fetch data");
         }
+        setEngineersLoading(false);
       }
     };
-    fetchAppointments();
+
+    fetchData();
   }, [token]);
 
   // Search, filter, sort logic
@@ -78,7 +103,7 @@ const AppointmentTable = () => {
     }
 
     const getField = (app, field) => {
-      if (field === "userName") return app.userId?.name?.toLowerCase() || "";
+      if (field === "name") return app.userId?.name?.toLowerCase() || "";
       if (field === "appointmentStatus") return (app.appointmentStatus || "").toLowerCase();
       return "";
     };
@@ -121,27 +146,9 @@ const AppointmentTable = () => {
     setSelected(null);
   };
 
-  // const handleUpdateStatus = async () => {
-  //   try {
-  //     await axios.put(
-  //       "http://localhost:3000/updateappointment",
-  //       { _id: selected._id, appointmentStatus: status },
-  //       { headers: { Authorization: `Bearer ${token}` } }
-  //     );
-  //     setAppointments(prev =>
-  //       prev.map(app =>
-  //         app._id === selected._id ? { ...app, appointmentStatus: status } : app
-  //       )
-  //     );
-  //     toast.success("Status updated");
-  //     closeUpdate();
-  //   } catch {
-  //     toast.error("Could not update status");
-  //   }
-  // };
   const handleUpdateStatus = async () => {
     try {
-      const userId = localStorage.getItem("userId");  // Example, replace with actual method to get user ID
+      // Example, replace with actual method to get user ID
       console.log("Updating status for appointment:", selected._id,
         "New status:", status);
 
@@ -162,84 +169,70 @@ const AppointmentTable = () => {
       toast.success("Status updated");
       closeUpdate();
     } catch (err) {
-      console.error("Error updating status:", err);
+      console.log("Error updating status:", err);
       toast.error("Could not update status");
     }
   };
 
-  // const handleDeleteAppointment = async () => {
-  //   try {
-  //     const userId = localStorage.getItem("userId");
-  //     const token = localStorage.getItem("token"); 
-  //     const appointmentId = localStorage.getItem("appointmentId")
-  //     console.log("appointmentId is",appointmentId)
-  //     console.log("Deleting appointment with ID:", selected._id);
-  //     const response = await axios.put(
-  //       "http://localhost:3000/deleteappointment",
-  //       {
-  //         _id: selected._id,
-
-  //         userId: userId
-  //       },
-  //       { headers: { Authorization: `Bearer ${token}` } }
-  //     );
-
-  //     setAppointments(prev => prev.filter(app => app._id !== selected._id));
-  //     toast.success("Appointment deleted");
-  //     closeDelete();
-  //   } catch (error) {
-  //     console.log("Error deleting appointment:", error);
-  //     toast.error("Could not delete appointment");
-  //   }
-  // };
-
-  // const handleDeleteAppointment = async () => {
-  //   try {
-  //     const token = localStorage.getItem("token"); 
-  //     const appointmentId = selected._id;
-
-  //     console.log("Deleting appointment with ID:", appointmentId);
-
-  //     const response = await axios.delete(
-  //       "http://localhost:3000/deleteappointment",
-  //       { _id: appointmentId },
-  //       { headers: { Authorization: `Bearer ${token}` } }
-  //     );
-
-  //     setAppointments(prev => prev.filter(app => app._id !== appointmentId));
-  //     toast.success("Appointment deleted");
-  //     closeDelete();
-  //   } catch (error) {
-  //     console.log("Error deleting appointment:", error);
-  //     toast.error("Could not delete appointment");
-  //   }
-  // };
-
   const handleDeleteAppointment = async () => {
     if (!selected) return;
   
-    const userId = localStorage.getItem("userId");
-    const token = localStorage.getItem("token"); // Adjust the key if it's different
+    // Adjust the key if it's different
   
     try {
       await axios.delete(`http://localhost:3000/deleteappointment`, {
-        params: {
-          _id: selected._id,
-          userId: userId,
-        },
+        data: { _id: selected._id },
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
+     
       toast.success("Appointment deleted!");
-      // setSelected(prev => prev.filter(app => app._id !== selected._id));
+      window.location.reload();
       closeDelete();
     } catch (error) {
       console.log(error);
       toast.error("Failed to delete appointment");
     }
   };
-  
+
+  const handleAssignClick = (appointment) => {
+    setSelectedAppointment(appointment);
+    setAssignDialogOpen(true);
+  };
+
+  // Update handleAssignSubmit to use the assignWorkToEngineer API
+const handleAssignSubmit = async () => {
+  if (!selectedEngineer) {
+    toast.error('Please select an engineer');
+    return;
+  }
+
+  console.log("Assigning task:", {
+    appointmentId: selectedAppointment?._id,
+    userId: selectedEngineer // Updated key to match backend expectation
+  }); // Debugging log
+
+  try {
+    // Call the assignWorkToEngineer API
+    const response = await axios.post(
+      'http://localhost:3000/assign',
+      {
+        appointmentId: selectedAppointment?._id,
+        userId: selectedEngineer // Updated key to match backend expectation
+      },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    console.log("Task assigned successfully:", response.data);
+    toast.success("Task assigned successfully!");
+    setAssignDialogOpen(false);
+  } catch (error) {
+    console.error('Error assigning task:', error);
+    toast.error('Failed to assign task');
+  }
+};
+
   return (
     <Box sx={{ p: 2 }}>
       <Toaster position="top-right" />
@@ -281,7 +274,7 @@ const AppointmentTable = () => {
           <TableHead>
             <TableRow>
               <TableCell>Sr. No</TableCell>
-              <TableCell onClick={() => handleSort("userName")} sx={{ cursor: "pointer" }}>
+              <TableCell onClick={() => handleSort("name")} sx={{ cursor: "pointer" }}>
                 Customer <SortIcon fontSize="small" />
               </TableCell>
               <TableCell>Contact</TableCell>
@@ -322,6 +315,9 @@ const AppointmentTable = () => {
                     <IconButton onClick={() => openDelete(app)}>
                       <DeleteIcon />
                     </IconButton>
+                    <IconButton onClick={() => handleAssignClick(app)} color="primary">
+                      <AssignmentIcon />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               ))
@@ -359,6 +355,64 @@ const AppointmentTable = () => {
         <DialogActions>
           <Button onClick={closeDelete} color="error">No</Button>
           <Button onClick={handleDeleteAppointment} variant="contained" color="error">Yes</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Assign Dialog */}
+      <Dialog 
+        open={assignDialogOpen} 
+        onClose={() => setAssignDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Assign Task</DialogTitle>
+        <DialogContent>
+          {selectedAppointment && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="h6" gutterBottom>Appointment Details</Typography>
+              <Typography><strong>Customer Name:</strong> {selectedAppointment.userId?.name}</Typography>
+              <Typography><strong>Contact:</strong> {selectedAppointment.userId?.mobile}</Typography>
+              <Typography><strong>Email:</strong> {selectedAppointment.userId?.email}</Typography>
+              <Typography><strong>Service Type:</strong> {selectedAppointment.serviceType}</Typography>
+              <Typography><strong>Device Brand:</strong> {selectedAppointment.deviceBrand}</Typography>
+              <Typography><strong>Problem Description:</strong> {selectedAppointment.problemDescription}</Typography>
+              
+              <FormControl fullWidth sx={{ mt: 3 }}>
+                <InputLabel>Select Engineer</InputLabel>
+                <Select
+                  value={selectedEngineer}
+                  onChange={(e) => setSelectedEngineer(e.target.value)}
+                  label="Select Engineer"
+                  disabled={engineersLoading}
+                >
+                  {engineersLoading ? (
+                    <MenuItem disabled>
+                      <CircularProgress size={20} />
+                    </MenuItem>
+                  ) : engineers.length > 0 ? (
+                    engineers.map((engineer) => (
+                      <MenuItem key={engineer._id} value={engineer._id}>
+                        {engineer.name} 
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem disabled>No engineers available</MenuItem>
+                  )}
+                </Select>
+              </FormControl>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAssignDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleAssignSubmit}
+            variant="contained"
+            color="primary"
+            disabled={!selectedEngineer}
+          >
+            Assign
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

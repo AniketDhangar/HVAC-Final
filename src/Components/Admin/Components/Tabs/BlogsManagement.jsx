@@ -1,6 +1,6 @@
 // Full Code - BlogsManagement.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Paper,
   Typography,
@@ -28,6 +28,7 @@ import {
   Search as SearchIcon,
   ArrowUpward as ArrowUpwardIcon,
   ArrowDownward as ArrowDownwardIcon,
+  Visibility as VisibilityIcon,
 } from "@mui/icons-material";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
@@ -50,6 +51,10 @@ const BlogsManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState("blogName");
   const [sortDirection, setSortDirection] = useState("asc");
+  const [imagePreview, setImagePreview] = useState(null);
+  const [formLoading, setFormLoading] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [openPreview, setOpenPreview] = useState(false);
 
   useEffect(() => {
     fetchBlogs();
@@ -84,11 +89,11 @@ const BlogsManagement = () => {
       setSortDirection("asc");
     }
   };
-  const token = localStorage.getItem("token"); // Assuming you have a token stored in localStorage
+  const token = localStorage.getItem("accessToken"); // Assuming you have a token stored in localStorage
   const fetchBlogs = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
+
       const response = await axios.get("http://localhost:3000/blogsforadmin", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -103,16 +108,52 @@ const BlogsManagement = () => {
     }
   };
 
+  // Validate form fields
+  const validateForm = () => {
+    if (!formData.blogName.trim()) {
+      toast.error("Blog name is required");
+      return false;
+    }
+    if (!formData.blogCategory.trim()) {
+      toast.error("Category is required");
+      return false;
+    }
+    if (!formData.blogDescription.trim()) {
+      toast.error("Description is required");
+      return false;
+    }
+    return true;
+  };
+
+  // Handle image change with validation and preview
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error("Please upload a valid image file");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image size should be less than 5MB");
+        return;
+      }
+      setFormData({ ...formData, blogImage: file });
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  // Handle dialog open (edit/add)
   const handleOpenDialog = (blog = null) => {
     if (blog) {
       setSelectedBlog(blog);
       setFormData({
         blogName: blog.blogName || "",
-        blogImage: "",
+        blogImage: "", // Will only set if new image is selected
         blogCategory: blog.blogCategory || "",
         blogDescription: blog.blogDescription || "",
         uploadedDate: blog.uploadedDate || "",
       });
+      setImagePreview(blog.blogImage ? blog.blogImage : null); // Show current image
     } else {
       setSelectedBlog(null);
       setFormData({
@@ -122,51 +163,106 @@ const BlogsManagement = () => {
         blogDescription: "",
         uploadedDate: "",
       });
+      setImagePreview(null);
     }
     setOpenDialog(true);
   };
 
+  // Handle dialog close
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedBlog(null);
+    setImagePreview(null);
   };
 
+  // Handle form field changes
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    setFormData({ ...formData, [name]: files ? files[0] : value });
-  };
-
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
-    const form = new FormData();
-    form.append("blogName", formData.blogName);
-    if (formData.blogImage) form.append("blogImage", formData.blogImage);
-    form.append("blogCategory", formData.blogCategory);
-    form.append("blogDescription", formData.blogDescription);
-    form.append("uploadedDate", formData.uploadedDate);
-
-    try {
-      if (selectedBlog) {
-        await axios.put(`http://localhost:3000/updateblog/${selectedBlog._id}`, form, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        toast.success("Blog updated successfully");
-      } else {
-        await axios.post("http://localhost:3000/addblogs", form, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        toast.success("Blog added successfully");
-      }
-      fetchBlogs();
-      handleCloseDialog();
-    } catch (error) {
-      console.error("Error saving blog:", error);
-      toast.error("Error saving blog");
+    if (name === "blogImage") {
+      handleImageChange(e);
+    } else {
+      setFormData({ ...formData, [name]: value });
     }
   };
 
-  const handleOpenConfirm = (id) => {
-    setBlogToDelete(id);
+  // Improved error handler
+  const handleApiError = (error) => {
+    if (error.response) {
+      toast.error(error.response.data.message || `Error: ${error.response.status}`);
+    } else if (error.request) {
+      toast.error("Network error. Please check your connection.");
+    } else {
+      toast.error("An unexpected error occurred.");
+    }
+  };
+
+  // Handle form submit (add/edit)
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+    setFormLoading(true);
+    
+    try {
+      const form = new FormData();
+      form.append("blogName", formData.blogName);
+      form.append("blogCategory", formData.blogCategory);
+      form.append("blogDescription", formData.blogDescription);
+      
+      if (selectedBlog) {
+        // Update blog
+        form.append("_id", selectedBlog._id);
+        if (formData.blogImage) {
+          form.append("blogImage", formData.blogImage);
+        }
+        
+        const response = await axios.put("http://localhost:3000/updateblog", form, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          },
+        });
+        
+        if (response.data.message) {
+          toast.success(response.data.message);
+          fetchBlogs();
+          handleCloseDialog();
+        }
+      } else {
+        // Add new blog
+        if (!formData.blogImage) {
+          toast.error("Please select an image");
+          setFormLoading(false);
+          return;
+        }
+        form.append("blogImage", formData.blogImage);
+        
+        const response = await axios.post("http://localhost:3000/addblogs", form, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          },
+        });
+        
+        if (response.data.message) {
+          toast.success(response.data.message);
+          fetchBlogs();
+          handleCloseDialog();
+        }
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      if (error.response) {
+        toast.error(error.response.data.message || "An error occurred");
+      } else {
+        toast.error("Network error. Please try again.");
+      }
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleOpenConfirm = (_id) => {
+    setBlogToDelete(_id);
     setOpenConfirm(true);
   };
 
@@ -179,6 +275,7 @@ const BlogsManagement = () => {
     try {
       await axios.delete(`http://localhost:3000/deleteblog`, {
         data: { _id: blogToDelete },
+        headers: { Authorization: `Bearer ${token}` },
       });
       toast.error("Blog deleted successfully");
       setBlogs(blogs.filter((blog) => blog._id !== blogToDelete));
@@ -188,6 +285,20 @@ const BlogsManagement = () => {
     } finally {
       handleCloseConfirm();
     }
+  };
+
+  const handlePreviewImage = (imageUrl) => {
+    // Convert relative path to full URL
+    const fullImageUrl = imageUrl.startsWith('http') 
+      ? imageUrl 
+      : `http://localhost:3000/${imageUrl.replace(/\\/g, '/')}`;
+    setPreviewImage(fullImageUrl);
+    setOpenPreview(true);
+  };
+
+  const handleClosePreview = () => {
+    setOpenPreview(false);
+    setPreviewImage(null);
   };
 
   return (
@@ -227,6 +338,7 @@ const BlogsManagement = () => {
                   <TableCell onClick={() => handleSort("blogName")}>Name {sortField === "blogName" && (sortDirection === "asc" ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />)}</TableCell>
                   <TableCell onClick={() => handleSort("blogCategory")}>Category {sortField === "blogCategory" && (sortDirection === "asc" ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />)}</TableCell>
                   <TableCell>Description</TableCell>
+                  <TableCell>Image</TableCell>
                   <TableCell align="center">Actions</TableCell>
                 </TableRow>
               </TableHead>
@@ -236,6 +348,17 @@ const BlogsManagement = () => {
                     <TableCell>{blog.blogName}</TableCell>
                     <TableCell>{blog.blogCategory}</TableCell>
                     <TableCell>{blog.blogDescription}</TableCell>
+                    <TableCell>
+                      {blog.blogImage && (
+                        <IconButton 
+                          color="primary" 
+                          onClick={() => handlePreviewImage(blog.blogImage)}
+                          size="small"
+                        >
+                          <VisibilityIcon />
+                        </IconButton>
+                      )}
+                    </TableCell>
                     <TableCell align="center">
                       <IconButton color="primary" onClick={() => handleOpenDialog(blog)}>
                         <EditIcon />
@@ -252,20 +375,82 @@ const BlogsManagement = () => {
         )}
       </Paper>
 
+      {/* Image Preview Dialog */}
+      <Dialog 
+        open={openPreview} 
+        onClose={handleClosePreview}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Blog Image Preview</DialogTitle>
+        <DialogContent>
+          {previewImage && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+              <img 
+                src={previewImage} 
+                alt="Blog Preview" 
+                style={{ 
+                  maxWidth: '100%', 
+                  maxHeight: '70vh', 
+                  objectFit: 'contain' 
+                }} 
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClosePreview}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Dialog for Add/Edit */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle>{selectedBlog ? "Edit Blog" : "Add Blog"}</DialogTitle>
         <DialogContent>
           <TextField label="Blog Name" name="blogName" value={formData.blogName} onChange={handleChange} fullWidth margin="normal" />
-          <TextField type="file" name="blogImage" onChange={handleChange} fullWidth margin="normal" inputProps={{ accept: "image/*" }} />
+          {/* Image upload and preview */}
+          <Box sx={{ mb: 2 }}>
+            <input
+              accept="image/*"
+              style={{ display: 'none' }}
+              id="blog-image-upload"
+              type="file"
+              name="blogImage"
+              onChange={handleChange}
+            />
+            <label htmlFor="blog-image-upload">
+              <Button variant="outlined" component="span" sx={{ mb: 1 }}>
+                {formData.blogImage ? "Change Image" : "Upload Image"}
+              </Button>
+            </label>
+            {imagePreview && (
+              <Box sx={{ mt: 1, mb: 1 }}>
+                <img src={imagePreview} alt="Preview" style={{ maxWidth: 200, maxHeight: 120, borderRadius: 8 }} />
+                <Button size="small" color="error" onClick={() => { setFormData({ ...formData, blogImage: "" }); setImagePreview(null); }}>
+                  Remove Image
+                </Button>
+              </Box>
+            )}
+          </Box>
           <TextField label="Category" name="blogCategory" value={formData.blogCategory} onChange={handleChange} fullWidth margin="normal" />
           <TextField label="Description" name="blogDescription" value={formData.blogDescription} onChange={handleChange} fullWidth margin="normal" multiline rows={3} />
-          {/* <TextField label="Date" name="uploadedDate" type="date" value={formData.uploadedDate} onChange={handleChange} fullWidth margin="normal" InputLabelProps={{ shrink: true }} /> */}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleFormSubmit} variant="contained" color="primary">
-            {selectedBlog ? "Update" : "Add"}
+          <Button onClick={handleCloseDialog} disabled={formLoading}>Cancel</Button>
+          <Button onClick={handleFormSubmit} variant="contained" color="primary" disabled={formLoading}>
+            {formLoading ? <CircularProgress size={24} /> : (selectedBlog ? "Update" : "Add")}
+            </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={openConfirm} onClose={handleCloseConfirm}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to delete this blog?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseConfirm}>Cancel</Button>
+          <Button onClick={handleDeleteConfirmed} variant="contained" color="error">
+            Delete
           </Button>
         </DialogActions>
       </Dialog>

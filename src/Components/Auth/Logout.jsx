@@ -2,24 +2,45 @@
 import React, { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { logout } from '../ReduxWork/UserSlice';
-import { Typography, Box } from '@mui/material';
+import { logout } from '../Reduxwork/userSlice';
+import { Typography, Box, CircularProgress } from '@mui/material';
 
 const Logout = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   useEffect(() => {
-    dispatch(logout());
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('role');
-    navigate('/login');
+    const performLogout = async () => {
+      try {
+        // Clear all local storage items
+        localStorage.clear();
+        
+        // Dispatch logout action
+        dispatch(logout());
+        
+        // Navigate to login page
+        navigate('/login', { replace: true });
+      } catch (error) {
+        console.error('Logout error:', error);
+        navigate('/login', { replace: true });
+      }
+    };
+
+    performLogout();
   }, [dispatch, navigate]);
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box 
+      sx={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        minHeight: '100vh',
+        gap: 2
+      }}
+    >
+      <CircularProgress />
       <Typography variant="h6">Logging out...</Typography>
     </Box>
   );

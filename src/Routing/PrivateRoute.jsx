@@ -2,14 +2,14 @@ import { useSelector } from 'react-redux';
 import { Navigate, useLocation } from 'react-router-dom';
 import { selectIsLoggedIn, selectUser, selectToken } from '../Components/Reduxwork/userslice';
 
-const ProtectedRoute = ({ children, allowedRoles }) => {
+const PrivateRoute = ({ children, allowedRoles }) => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const userData = useSelector(selectUser);
   const token = useSelector(selectToken);
   const location = useLocation();
   const accessToken = localStorage.getItem('accessToken');
 
-  console.log('ProtectedRoute check:', {
+  console.log('PrivateRoute check:', {
     isLoggedIn,
     userRole: userData?.role,
     allowedRoles,
@@ -47,4 +47,4 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   return children;
 };
 
-export default ProtectedRoute;
+export default PrivateRoute; 

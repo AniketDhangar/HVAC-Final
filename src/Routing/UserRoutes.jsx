@@ -8,7 +8,7 @@ import Blog from '../Components/User/Components/Pages/Blog';
 import Services from '../Components/User/Components/Pages/Services';
 import Cart from '../Components/User/Components/Pages/Cart';
 import AppointmentForm from '../Components/User/Components/Pages/AppointmentForm';
-import Profile from '../../src/Components/Auth/Profile';
+import Profile from '../Components/Auth/Profile';
 import ProtectedRoute from './ProtectedRoute';
 
 const UserRoutes = () => {
@@ -17,13 +17,13 @@ const UserRoutes = () => {
       <ResponsiveDrawer />
       <Routes>
         {/* Public Routes */}
-        <Route index path="home" element={<Home />} />
-        <Route index path="about" element={<About />} />
-        <Route index path="contact" element={<Contact />} />
-        <Route index path="blogs" element={<Blog />} />
-        <Route index path="services" element={<Services />} />
+        <Route path="home" element={<Home />} />
+        <Route path="about" element={<About />} />
+        <Route path="contact" element={<Contact />} />
+        <Route path="blogs" element={<Blog />} />
+        <Route path="services" element={<Services />} />
 
-        {/* Protected Routes */}
+        {/* Protected Routes - Only accessible to logged-in users */}
         <Route
           path="cart"
           element={
@@ -32,26 +32,28 @@ const UserRoutes = () => {
             </ProtectedRoute>
           }
         />
-        <Route index
+        <Route
           path="take-appointment"
           element={
             <ProtectedRoute allowedRoles={['user']}>
               <AppointmentForm />
-             </ProtectedRoute>
+            </ProtectedRoute>
           }
         />
-        {/* Optional: Protect profile route */}
         <Route
           path="profile"
           element={
-            // <ProtectedRoute allowedRoles={['user']}>
+            <ProtectedRoute allowedRoles={['user']}>
               <Profile />
-            //  </ProtectedRoute> 
+            </ProtectedRoute>
           }
         />
 
-        {/* Catch-all */}
-        <Route path="*" element={<Navigate to="/user/home" />} />
+        {/* Default route */}
+        <Route path="/" element={<Navigate to="home" replace />} />
+        
+        {/* Catch-all route */}
+        <Route path="*" element={<Navigate to="home" replace />} />
       </Routes>
     </>
   );

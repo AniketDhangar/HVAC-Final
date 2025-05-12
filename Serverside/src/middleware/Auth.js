@@ -2,32 +2,75 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { User } from "../models/UserSchema.js";
 
+// Load environment variables
 dotenv.config();
 
 const authenticateToken = async (req, res, next) => {
   const authHeader = req.header("Authorization");
-  console.log("Authorization Header:", authHeader);
-
+  
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "Access Denied: No token provided" });
+    return res.status(401).json({ 
+      success: false,
+      message: "Access Denied: No token provided" 
+    });
   }
 
-  const token = authHeader.split(" ")[1]; // Extract token
+  const token = authHeader.split(" ")[1];
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET); 
-
-    // Fetch user details from DB
-    const user = await User.findById(decoded._id).select("-password"); // Exclude password
-    if (!user) {
-      return res.status(401).json({ message: "User not found" });
+    // Get JWT secret from environment variables
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new Error("JWT_SECRET is not defined in environment variables");
     }
 
-    req.loggedUser = user; // Attach user object to request
+    // Verify token
+    const decoded = jwt.verify(token, jwtSecret);
+    console.log("Decoded Token:", decoded);
+    
+    // Check if token is expired
+    // if (decoded.exp < Date.now() / 1000) {
+    //   return res.status(401).json({ 
+    //     success: false,
+    //     message: "Token has expired" 
+    //   });
+    // }
+
+    // Fetch user details from DB
+    const user = await User.findById(decoded._id).select("-password");
+    console.log("Fetched User:", user);
+    
+    if (!user) {
+      return res.status(401).json({ 
+        success: false,
+        message: "User not found" 
+      });
+    }
+
+    // Attach user object to request
+    req.loggedUser = user;
     next();
   } catch (error) {
     console.error("JWT Verification Error:", error.message);
-    return res.status(403).json({ message: "Invalid or Expired Token" });
+    
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ 
+        success: false,
+        message: "Invalid token" 
+      });
+    }
+    
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ 
+        success: false,
+        message: "Token has expired" 
+      });
+    }
+
+    return res.status(500).json({ 
+      success: false,
+      message: error.message || "Internal server error" 
+    });
   }
 };
 
@@ -35,11 +78,22 @@ const authenticateToken = async (req, res, next) => {
 const authorizeRoles = (allowedRoles) => {
   return (req, res, next) => {
     if (!req.loggedUser) {
-      return res.status(401).json({ success: false, message: "Unauthorized: User not authenticated" });
+      return res.status(401).json({ 
+        success: false, 
+        message: "Unauthorized: User not authenticated" 
+      });
     }
+
+    console.log("Logged User:", req.loggedUser);
+    console.log("Allowed Roles:", allowedRoles);
+
     if (!allowedRoles.includes(req.loggedUser.role)) {
-      return res.status(403).json({ success: false, message: "Access Denied: Insufficient permissions" });
+      return res.status(403).json({ 
+        success: false, 
+        message: "Access Denied: Insufficient permissions" 
+      });
     }
+
     next();
   };
 };

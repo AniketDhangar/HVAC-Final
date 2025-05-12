@@ -1,9 +1,10 @@
-
-
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { User } from "../models/UserSchema.js";
+import dotenv from "dotenv";
 
+// Load environment variables
+dotenv.config();
 
 const registerUser = async (req, res) => {
   try {
@@ -38,43 +39,83 @@ const doLogin = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: "Fill all details carefully" });
+      return res.status(400).json({ 
+        success: false,
+        message: "Please provide both email and password" 
+      });
     }
 
     // Find user
     const loggedUser = await User.findOne({ email });
 
     if (!loggedUser) {
-      return res.status(401).json({ message: "User is not registered" });
+      return res.status(401).json({ 
+        success: false,
+        message: "Invalid credentials" 
+      });
     }
 
     // Validate password using bcrypt
-    const isPasswordValid = bcrypt.compare(password, loggedUser.password); // Faster sync comparison
+    const isPasswordValid = await bcrypt.compare(password, loggedUser.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ message: "Password is incorrect" });
+      return res.status(401).json({ 
+        success: false,
+        message: "Invalid credentials" 
+      });
     }
 
-    // Token creation
-    const payload = { email: loggedUser.email, _id: loggedUser._id, role: loggedUser.role };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "2h" });
+    // Get JWT secret from environment variables
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new Error("JWT_SECRET is not defined in environment variables");
+    }
 
-    // Construct response object (Avoid mutating original user object)
+    // Create access token (short-lived)
+    const accessToken = jwt.sign(
+      { 
+        email: loggedUser.email, 
+        _id: loggedUser._id, 
+        role: loggedUser.role 
+      }, 
+      jwtSecret, 
+      { expiresIn: process.env.JWT_EXPIRATION || "1h" }
+    );
+
+    // Create refresh token (long-lived)
+    const refreshToken = jwt.sign(
+      { 
+        _id: loggedUser._id 
+      },
+      jwtSecret,
+      { expiresIn: "7d" }
+    );
+
+    // Save refresh token to user document
+    loggedUser.refreshToken = refreshToken;
+    await loggedUser.save();
+
+    // Construct response object
     const responseUser = {
       email: loggedUser.email,
       name: loggedUser.name,
       _id: loggedUser._id,
       role: loggedUser.role,
-      token,
+      accessToken,
+      refreshToken
     };
-    console.log(responseUser);
+
     return res.status(200).json({
+      success: true,
       message: "Logged in successfully",
-      loggedUser: responseUser,
+      loggedUser: responseUser
     });
 
   } catch (error) {
-    console.error("Login Error:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    console.error("Login error:", error);
+    return res.status(500).json({ 
+      success: false,
+      message: error.message || "Internal server error" 
+    });
   }
 };
 
@@ -156,4 +197,36 @@ const deleteUser = async (req, res) => {
   }
 };
 
-export { registerUser, getUsers, updateUser, doLogin, deleteUser };
+// Updated to use req.loggedUser instead of req.user
+const getEngineers = async (req, res) => {
+  try {
+    // Verify if the requesting user is an admin
+    if (!req.loggedUser || req.loggedUser.role !== 'admin') {
+      return res.status(403).json({ 
+        success: false,
+        message: 'Only admins can view engineer list' 
+      });
+    }
+
+    const engineers = await User.find({ 
+      role: 'engineer',
+      isBlock: false // Only get active engineers
+    })
+    .select('_id name email phone mobile specialization isBlock')
+    .lean();
+
+    res.status(200).json({
+      success: true,
+      engineers
+    });
+  } catch (error) {
+    console.error('Error fetching engineers:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching engineers',
+      error: error.message 
+    });
+  }
+};
+
+export { registerUser, getUsers, updateUser, doLogin, deleteUser, getEngineers };

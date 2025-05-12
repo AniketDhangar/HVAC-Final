@@ -7,13 +7,15 @@ import {
   Typography,
   CircularProgress,
   Divider,
-  Grid
+  Grid,
+  useTheme,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { logout } from '../Reduxwork/userSlice'; 
+import { logout } from '../Reduxwork/userSlice';
 
 const Profile = () => {
+  const theme = useTheme();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useSelector((state) => state.user);
@@ -26,7 +28,7 @@ const Profile = () => {
           justifyContent: 'center',
           alignItems: 'center',
           minHeight: '100vh',
-          backgroundColor: 'background.paper',
+          bgcolor: 'background.paper',
         }}
       >
         <CircularProgress />
@@ -34,8 +36,7 @@ const Profile = () => {
     );
   }
 
-  const { userData } = user;
-  const { name, email, role, mobile } = userData;
+  const { name, email, role, mobile } = user.userData;
 
   const handleLogout = () => {
     dispatch(logout());
@@ -45,85 +46,67 @@ const Profile = () => {
   return (
     <Box
       sx={{
+        minHeight: '80vh',
+        bgcolor: 'background.default',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        minHeight: '100vh',
-        backgroundColor: 'background.default',
-        padding: 3,
+        px: 2,
       }}
     >
-      <Card sx={{ maxWidth: 500, width: '100%', borderRadius: 3, boxShadow: 3 }}>
-        <CardContent>
+      <Card sx={{ maxWidth: 550, width: '100%', borderRadius: 4, boxShadow: 4 }}>
+        <CardContent sx={{ p: theme.spacing(4) }}>
           <Typography
-            variant="h3"
+            variant="h4"
             align="center"
-            gutterBottom
-            sx={{
-              fontWeight: 'bold',
-              color: 'primary.main',
-              fontSize: '2.5rem',
-            }}
+            sx={{ fontWeight: 'bold', color: 'primary.main', mb: 3 }}
           >
-            Profile
+            User Profile
           </Typography>
-          <Divider sx={{ marginBottom: 2 }} />
 
-          <Grid container direction="column" spacing={2}>
-            <Grid item>
-              <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.2rem' }}>
-                Name:
-              </Typography>
-              <Typography variant="body1" sx={{ color: 'text.secondary', fontSize: '1.1rem' }}>
-                {name}
-              </Typography>
-            </Grid>
+          <Divider sx={{ mb: 3 }} />
 
-            <Grid item>
-              <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.2rem' }}>
-                Email:
-              </Typography>
-              <Typography variant="body1" sx={{ color: 'text.secondary', fontSize: '1.1rem' }}>
-                {email}
-              </Typography>
-            </Grid>
-
-            <Grid item>
-              <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.2rem' }}>
-                Role:
-              </Typography>
-              <Typography variant="body1" sx={{ color: 'text.secondary', fontSize: '1.1rem' }}>
-                {role}
-              </Typography>
-            </Grid>
-
-            {mobile && (
-              <Grid item>
-                <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.2rem' }}>
-                  Mobile:
-                </Typography>
-                <Typography variant="body1" sx={{ color: 'text.secondary', fontSize: '1.1rem' }}>
-                  {mobile}
-                </Typography>
-              </Grid>
+          <Grid container spacing={2}>
+            {[['Name', name], ['Email', email], ['Role', role], ['Mobile', mobile]].map(
+              ([label, value], idx) =>
+                value && (
+                  <Grid item xs={12} key={idx}>
+                    <Grid container>
+                      <Grid item xs={4}>
+                        <Typography
+                          variant="subtitle1"
+                          sx={{ fontWeight: 600, fontSize: '1.1rem' }}
+                        >
+                          {label}:
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={8}>
+                        <Typography
+                          variant="body1"
+                          sx={{ color: 'text.secondary', fontSize: '1.05rem' }}
+                        >
+                          {value}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </Grid>
+                )
             )}
           </Grid>
 
-          <Box sx={{ marginTop: 3 }}>
+          <Box sx={{ mt: 4 }}>
             <Button
               variant="contained"
               color="primary"
               fullWidth
               onClick={handleLogout}
               sx={{
-                borderRadius: 20,
-                padding: '12px 0',
+                borderRadius: 30,
+                py: 1.5,
                 fontWeight: 'bold',
+                fontSize: '1rem',
                 textTransform: 'none',
-                fontSize: '1.1rem',
-                '&:hover': {
-                  backgroundColor: 'primary.dark',
-                },
+                boxShadow: 2,
               }}
             >
               Logout
@@ -136,3 +119,4 @@ const Profile = () => {
 };
 
 export default Profile;
+  
