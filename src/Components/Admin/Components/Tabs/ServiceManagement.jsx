@@ -257,9 +257,7 @@ const ServiceManagement = () => {
 
   const handlePreviewImage = (imageUrl) => {
     // Convert relative path to full URL
-    const fullImageUrl = imageUrl.startsWith('http') 
-      ? imageUrl 
-      : `http://localhost:3000/${imageUrl.replace(/\\/g, '/')}`;
+    const fullImageUrl = `http://localhost:3000/${imageUrl.replace(/\\/g, '/')}`;
     setPreviewImage(fullImageUrl);
     setOpenPreview(true);
   };

@@ -173,53 +173,6 @@ const getEngineerTasks = async (req, res) => {
 
 
 
-// Update task status
-const updateAppointment = async (req, res) => {
-  try {
-    const { appointmentStatus, _id, userId } = req.body;
 
-    // Ensure the userId is passed for authorization
-    if (!userId) {
-      return res.status(400).json({ message: "User ID is required." });
-    }
-
-    // Fetch user for authorization check
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
-
-    // Only allow users with specific roles to update status
-    if (user.role !== "admin" && user.role !== "engineer") {
-      return res
-        .status(403)
-        .json({ message: "Only admins and engineers can update status." });
-    }
-
-    // Validate appointment status
-    const validStatuses = ["Pending", "Approved", "Completed", "Cancelled"];
-    if (!validStatuses.includes(appointmentStatus)) {
-      return res.status(400).json({ message: "Invalid appointment status." });
-    }
-
-    // Update appointment
-    const appointment = await Appointment.findByIdAndUpdate(
-      _id,
-      { appointmentStatus },
-      { new: true }
-    );
-
-    if (!appointment) {
-      return res.status(404).json({ message: "Appointment not found." });
-    }
-
-    res
-      .status(200)
-      .json({ success: true, message: "Appointment updated!", appointment });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Something went wrong during update." });
-  }
-};
 
 export { assignWorkToEngineer, getAppointmentsForEngineer,getAppointmentByIdForEngineer,getEngineerTasks };

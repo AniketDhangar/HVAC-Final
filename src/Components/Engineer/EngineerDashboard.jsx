@@ -30,7 +30,7 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import toast, { Toaster } from "react-hot-toast";
 import { Edit as EditIcon } from '@mui/icons-material';
 
 const EngineerDashboard = () => {
@@ -93,15 +93,22 @@ const EngineerDashboard = () => {
       console.log('Fetched appointments:', response.data.appointments);
       setAppointments(response.data.appointments || []);
       calculateStats(response.data.appointments || []);
+      toast.success(' Appointments Fetched successfully. !'), {
+        duration: 5000  // Display for 5 seconds (5000 milliseconds)
+      };
     } catch (err) {
       console.log('Error fetching appointments:', err.response?.data || err.message);
       if (err.response?.status === 401) {
-        toast.error('Unauthorized. Please log in again.');
+        toast.error('Unauthorized. Please log in again.'), {
+          duration: 5000  // Display for 5 seconds (5000 milliseconds)
+        };
         localStorage.clear();
         window.location.href = '/login';
       } else {
         setError('Failed to fetch appointments');
-        toast.error('Failed to fetch appointments. Please try again later.');
+        toast.error('Failed to fetch appointments. Please try again later.', {
+          duration: 5000  // Display for 5 seconds (5000 milliseconds)
+        });
       }
     } finally {
       setLoading(false);
@@ -142,7 +149,9 @@ const EngineerDashboard = () => {
         )
       );
 
-      toast.success('Appointment status updated successfully!');
+      toast.success('Appointment status updated successfully!', {
+        duration: 5000  // Display for 5 seconds (5000 milliseconds)
+      });
       closeUpdate();
 
       // Trigger full page reload to refresh data
@@ -150,7 +159,9 @@ const EngineerDashboard = () => {
     } catch (err) {
       console.error('Error updating status:', err.response?.data || err.message);
       setError('Failed to update appointment status');
-      toast.error('Failed to update appointment status. Please try again later.');
+      toast.error('Failed to update appointment status. Please try again later.', {
+        duration: 5000  // Display for 5 seconds (5000 milliseconds)
+      });
     }
   };
 
@@ -173,6 +184,7 @@ const EngineerDashboard = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Toaster position="top-right" />
       <Typography variant="h4" gutterBottom>
         Engineer Dashboard
       </Typography>
@@ -295,7 +307,7 @@ const EngineerDashboard = () => {
               <MenuItem value="Approved">Approved</MenuItem>
               <MenuItem value="Completed">Completed</MenuItem>
               <MenuItem value="Cancelled">Cancelled</MenuItem>
-              <MenuItem value="In Progress">In Progress</MenuItem>
+
             </Select>
           </FormControl>
         </DialogContent>

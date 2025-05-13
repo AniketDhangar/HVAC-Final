@@ -39,9 +39,9 @@ const doLogin = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        message: "Please provide both email and password" 
+        message: "Please provide both email and password",
       });
     }
 
@@ -49,18 +49,18 @@ const doLogin = async (req, res) => {
     const loggedUser = await User.findOne({ email });
 
     if (!loggedUser) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
-        message: "Invalid credentials" 
+        message: "Invalid credentials",
       });
     }
 
     // Validate password using bcrypt
     const isPasswordValid = await bcrypt.compare(password, loggedUser.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         success: false,
-        message: "Invalid credentials" 
+        message: "Invalid credentials",
       });
     }
 
@@ -72,19 +72,19 @@ const doLogin = async (req, res) => {
 
     // Create access token (short-lived)
     const accessToken = jwt.sign(
-      { 
-        email: loggedUser.email, 
-        _id: loggedUser._id, 
-        role: loggedUser.role 
-      }, 
-      jwtSecret, 
+      {
+        email: loggedUser.email,
+        _id: loggedUser._id,
+        role: loggedUser.role,
+      },
+      jwtSecret,
       { expiresIn: process.env.JWT_EXPIRATION || "1h" }
     );
 
     // Create refresh token (long-lived)
     const refreshToken = jwt.sign(
-      { 
-        _id: loggedUser._id 
+      {
+        _id: loggedUser._id,
       },
       jwtSecret,
       { expiresIn: "7d" }
@@ -101,27 +101,25 @@ const doLogin = async (req, res) => {
       _id: loggedUser._id,
       role: loggedUser.role,
       accessToken,
-      refreshToken
+      refreshToken,
     };
 
     return res.status(200).json({
       success: true,
       message: "Logged in successfully",
-      loggedUser: responseUser
+      loggedUser: responseUser,
     });
-
   } catch (error) {
     console.error("Login error:", error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       success: false,
-      message: error.message || "Internal server error" 
+      message: error.message || "Internal server error",
     });
   }
 };
 
 const getUsers = async (req, res) => {
   try {
-
     const allUsers = await User.find()
       .populate("appointmentId")
       .populate("assignedAppointments")
@@ -139,12 +137,11 @@ const getUsers = async (req, res) => {
   }
 };
 
-
 const updateUser = async (req, res) => {
   try {
     const { _id, newName, newMobile, newPassword, isBlock, userId } = req.body;
 
-    // Fetch the user making the request
+
     const requestingUser = await User.findById(userId);
     if (!requestingUser) {
       return res.status(404).json({ message: "Requesting user not found" });
@@ -185,48 +182,57 @@ const updateUser = async (req, res) => {
 const deleteUser = async (req, res) => {
   try {
     const { email, _id } = req.body;
+    if (!_id && !email) {
+      return res.status(400).json({ message: 'Email or ID required' });
+    }
     const findUser = await User.findOne({ $or: [{ email }, { _id }] });
     if (!findUser) {
-      res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: 'User not found' });
     }
     const deletedUser = await User.findByIdAndDelete(findUser._id);
-    res.status(200).json({ message: "User is deleted !", deletedUser });
+    res.status(200).json({ message: 'User is deleted !', deletedUser });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "User is not  deleted !", error });
+    console.log('Delete user error:', error);
+    res.status(500).json({ message: 'User is not deleted !', error: error.message });
   }
 };
 
-// Updated to use req.loggedUser instead of req.user
 const getEngineers = async (req, res) => {
   try {
     // Verify if the requesting user is an admin
-    if (!req.loggedUser || req.loggedUser.role !== 'admin') {
-      return res.status(403).json({ 
+    if (!req.loggedUser || req.loggedUser.role !== "admin") {
+      return res.status(403).json({
         success: false,
-        message: 'Only admins can view engineer list' 
+        message: "Only admins can view engineer list",
       });
     }
 
-    const engineers = await User.find({ 
-      role: 'engineer',
-      isBlock: false // Only get active engineers
+    const engineers = await User.find({
+      role: "engineer",
+      isBlock: false, // Only get active engineers
     })
-    .select('_id name email phone mobile specialization isBlock')
-    .lean();
+      .select("_id name email phone mobile specialization isBlock")
+      .lean();
 
     res.status(200).json({
       success: true,
-      engineers
+      engineers,
     });
   } catch (error) {
-    console.error('Error fetching engineers:', error);
-    res.status(500).json({ 
+    console.error("Error fetching engineers:", error);
+    res.status(500).json({
       success: false,
-      message: 'Error fetching engineers',
-      error: error.message 
+      message: "Error fetching engineers",
+      error: error.message,
     });
   }
 };
 
-export { registerUser, getUsers, updateUser, doLogin, deleteUser, getEngineers };
+export {
+  registerUser,
+  getUsers,
+  updateUser,
+  doLogin,
+  deleteUser,
+  getEngineers,
+};

@@ -18,7 +18,7 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 import { Edit as EditIcon } from '@mui/icons-material';
 
 const AppointmentDetails = () => {
@@ -136,6 +136,7 @@ const AppointmentDetails = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+       <Toaster position="top-right" />
       <Typography variant="h4" gutterBottom>
         Appointment Details
       </Typography>
