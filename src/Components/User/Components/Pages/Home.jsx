@@ -4,21 +4,14 @@ import { styled } from '@mui/material/styles';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { use } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Files from '../Files';
+
 import FloatingApp from './FloatingApp';
 import About from './About';
 import Services from './Services';
 import Blog from './Blog';
 import Contact from './Contact';
 
-// Remove local image imports and use online URLs
-// const brandLogos = {
-//   carrier: "https://upload.wikimedia.org/wikipedia/commons/6/6a/Carrier_logo.svg",
-//   goodman: "https://upload.wikimedia.org/wikipedia/commons/3/3f/Goodman_logo.png",
-//   daikin: "https://upload.wikimedia.org/wikipedia/commons/c/cd/Daikin_logo.svg",
-//   rheem: "https://upload.wikimedia.org/wikipedia/commons/8/89/Rheem_logo.svg",
-//   mekar: "https://www.mekar.eu/wp-content/uploads/2019/02/logo-mekar.png"
-// };
+
 
 // Background image URL
 const backgroundImage = "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80";

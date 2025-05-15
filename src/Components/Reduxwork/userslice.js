@@ -1,4 +1,3 @@
-// userslice.js
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
@@ -7,7 +6,6 @@ const initialState = {
   token: null,
   loading: false,
   error: null,
-  // Add session tracking
   sessions: {},
   currentSession: null
 };
@@ -38,6 +36,14 @@ const userSlice = createSlice({
       state.loading = false;
       state.error = null;
     },
+    updateUserData: (state, action) => {
+      state.userData = action.payload;
+      if (state.currentSession && state.sessions[state.currentSession]) {
+        state.sessions[state.currentSession].userData = action.payload;
+      }
+      state.loading = false;
+      state.error = null;
+    },
     switchSession: (state, action) => {
       const { sessionId } = action.payload;
       if (state.sessions[sessionId]) {
@@ -47,44 +53,43 @@ const userSlice = createSlice({
         state.isLoggedIn = state.sessions[sessionId].isLoggedIn;
       }
     },
-   logout: (state, action) => {
-  const sessionId = action?.payload?.sessionId;
-  console.log('Logging out user from session:', sessionId);
+    logout: (state, action) => {
+      const sessionId = action?.payload?.sessionId;
+      console.log('Logging out user from session:', sessionId);
 
-  if (sessionId) {
-    // Remove specific session
-    delete state.sessions[sessionId];
+      if (sessionId) {
+        // Remove specific session
+        delete state.sessions[sessionId];
 
-    // If logging out current session, switch to another if available
-    if (state.currentSession === sessionId) {
-      const remainingSessions = Object.keys(state.sessions);
-      if (remainingSessions.length > 0) {
-        state.currentSession = remainingSessions[0];
-        const activeSession = state.sessions[state.currentSession];
-        state.userData = activeSession.userData;
-        state.token = activeSession.token;
-        state.isLoggedIn = activeSession.isLoggedIn;
+        // If logging out current session, switch to another if available
+        if (state.currentSession === sessionId) {
+          const remainingSessions = Object.keys(state.sessions);
+          if (remainingSessions.length > 0) {
+            state.currentSession = remainingSessions[0];
+            const activeSession = state.sessions[state.currentSession];
+            state.userData = activeSession.userData;
+            state.token = activeSession.token;
+            state.isLoggedIn = activeSession.isLoggedIn;
+          } else {
+            // No sessions left
+            state.userData = null;
+            state.token = null;
+            state.isLoggedIn = false;
+            state.currentSession = null;
+          }
+        }
       } else {
-        // No sessions left
+        // Clear all sessions
+        state.sessions = {};
         state.userData = null;
         state.token = null;
         state.isLoggedIn = false;
         state.currentSession = null;
       }
-    }
-  } else {
-    // Clear all sessions
-    state.sessions = {};
-    state.userData = null;
-    state.token = null;
-    state.isLoggedIn = false;
-    state.currentSession = null;
-  }
 
-  state.loading = false;
-  state.error = null;
-}
-,
+      state.loading = false;
+      state.error = null;
+    },
     setLoading: (state, action) => {
       state.loading = action.payload;
     },
@@ -95,7 +100,7 @@ const userSlice = createSlice({
   },
 });
 
-export const { setUser, logout, setLoading, setError, switchSession } = userSlice.actions;
+export const { setUser, updateUserData, logout, setLoading, setError, switchSession } = userSlice.actions;
 
 // Selectors
 export const selectUser = (state) => state.user.userData;

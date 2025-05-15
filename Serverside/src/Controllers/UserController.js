@@ -139,7 +139,7 @@ const getUsers = async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
-    const { _id, newName, newMobile, newPassword, isBlock, userId } = req.body;
+    const { _id, newName, newMobile, newPassword,newEmail, isBlock, userId ,newAddress} = req.body;
 
 
     const requestingUser = await User.findById(userId);
@@ -161,6 +161,8 @@ const updateUser = async (req, res) => {
     let updateData = {};
     if (newName) updateData.name = newName;
     if (newMobile) updateData.mobile = newMobile;
+    if (newEmail) updateData.email = newEmail;
+    if(newAddress)  updateData.address = newAddress
     if (newPassword) updateData.password = await bcrypt.hash(newPassword, 10);
     if (isBlock !== undefined) updateData.isBlock = isBlock;
 

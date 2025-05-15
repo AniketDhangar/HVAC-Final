@@ -10,10 +10,14 @@ import Cart from '../Components/User/Components/Pages/Cart';
 import AppointmentForm from '../Components/User/Components/Pages/AppointmentForm';
 import Profile from '../Components/Auth/Profile';
 import ProtectedRoute from './ProtectedRoute';
+import MyAppointments from '../Components/User/Components/Pages/MyAppointments';
+import { CssBaseline } from '@mui/material';
+import Footer from '../Components/User/Components/Pages/Footer';
 
 const UserRoutes = () => {
   return (
-    <>
+    <> 
+    <CssBaseline/>
       <ResponsiveDrawer />
       <Routes>
         {/* Public Routes */}
@@ -48,13 +52,22 @@ const UserRoutes = () => {
             </ProtectedRoute>
           }
         />
-
+        <Route
+          path="my-appointments"
+          element={
+            <ProtectedRoute allowedRoles={['user']}>
+              <MyAppointments />
+            </ProtectedRoute>
+          }
+        />
         {/* Default route */}
         <Route path="/" element={<Navigate to="home" replace />} />
-        
+
         {/* Catch-all route */}
         <Route path="*" element={<Navigate to="home" replace />} />
+       
       </Routes>
+       <Footer/>
     </>
   );
 };

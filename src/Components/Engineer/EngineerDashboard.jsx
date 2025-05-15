@@ -32,6 +32,7 @@ import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
 import toast, { Toaster } from "react-hot-toast";
 import { Edit as EditIcon } from '@mui/icons-material';
+import Loader from '../Auth/Loader';
 
 const EngineerDashboard = () => {
   const [appointments, setAppointments] = useState([]);
@@ -176,9 +177,7 @@ const EngineerDashboard = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
-        <CircularProgress />
-      </Box>
+      <> <Loader />      </>
     );
   }
 

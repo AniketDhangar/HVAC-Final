@@ -4,17 +4,13 @@ import {
   Box, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, Paper, Typography, IconButton, Dialog, DialogTitle,
   DialogContent, DialogActions, Button, TextField, MenuItem,
-  InputAdornment, FormControl, InputLabel, Select,
-  CircularProgress
+  InputAdornment, FormControl, InputLabel, Select, CircularProgress
 } from "@mui/material";
 import toast, { Toaster } from "react-hot-toast";
 import {
-  Edit as EditIcon,
-  Delete as DeleteIcon,
+  Settings as SettingsIcon,
   Search as SearchIcon,
-  Sort as SortIcon,
-  Assignment as AssignmentIcon,
-  Edit
+  Sort as SortIcon
 } from "@mui/icons-material";
 
 const AppointmentTable = () => {
@@ -24,51 +20,69 @@ const AppointmentTable = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortField, setSortField] = useState("userName");
   const [sortDirection, setSortDirection] = useState("asc");
-  const [openDialog, setOpenDialog] = useState(false);
-  const [deleteDialog, setDeleteDialog] = useState(false);
+  const [actionDialogOpen, setActionDialogOpen] = useState(false);
   const [selected, setSelected] = useState(null);
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState("Pending");
   const [engineers, setEngineers] = useState([]);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [selectedEngineer, setSelectedEngineer] = useState('');
   const [engineersLoading, setEngineersLoading] = useState(true);
+  const [appointmentsLoading, setAppointmentsLoading] = useState(true);
+  const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
+  const [engineerToView, setEngineerToView] = useState(null);
 
   const userId = localStorage.getItem("userId");
   const token = localStorage.getItem("accessToken");
+
   if (!token) {
     toast.error("No token found. Please log in.");
     return null;
   }
 
-  // Fetch appointments and engineers on mount
+  const fetchAppointments = async () => {
+    try {
+      setAppointmentsLoading(true);
+      const { data } = await axios.get(
+        "http://localhost:3000/getappoinments",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      console.log("Appointments data:", data.appointments);
+      const list = (data.appointments || []).map(app => ({
+        ...app,
+        appointmentStatus: app.appointmentStatus === "Assigned" ? "Pending" : app.appointmentStatus
+      }));
+      setAppointments(list);
+      setFiltered(list);
+      setAppointmentsLoading(false);
+      console.log("data object",data)
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+      if (error.response?.status === 401) {
+        toast.error("Session expired. Please log in again.");
+        localStorage.removeItem("accessToken");
+        window.location.href = "/login";
+      } else {
+        toast.error("Failed to fetch appointments");
+      }
+      setAppointmentsLoading(false);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch appointments
-        const { data } = await axios.get(
-          "http://localhost:3000/getappoinments",
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        const list = data.appointments || [];
-        setAppointments(list);
-        setFiltered(list);
-
-        // Fetch engineers
+        await fetchAppointments();
         const engineersResponse = await axios.get(
           "http://localhost:3000/getengineers",
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        console.log("Engineers API response:", engineersResponse.data); // Debugging log
-
-        // Filter active engineers
+        console.log("Engineers API response:", engineersResponse.data);
         const activeEngineers = engineersResponse.data.engineers.filter(engineer => !engineer.isBlock);
-        console.log("Active engineers:", activeEngineers); // Debugging log
-
         setEngineers(activeEngineers);
         setEngineersLoading(false);
       } catch (error) {
-        console.error("Error fetching data:", error); // Fixed syntax issue
+        console.error("Error fetching data:", error);
         if (error.response?.status === 401) {
           toast.error("Session expired. Please log in again.");
           localStorage.removeItem("accessToken");
@@ -79,12 +93,23 @@ const AppointmentTable = () => {
         setEngineersLoading(false);
       }
     };
-
     fetchData();
   }, [token]);
 
-  // Search, filter, sort logic
+  const handleOpenDetailsDialog = (engineer) => {
+    console.log('Selected engineer for viewing details:', engineer);
+    setEngineerToView(engineer);
+    setOpenDetailsDialog(true);
+  };
+
+  const handleCloseDetailsDialog = () => {
+    setOpenDetailsDialog(false);
+    setEngineerToView(null);
+  };
+
   useEffect(() => {
+    console.log("Appointments:", appointments);
+    console.log("Engineers:", engineers);
     let list = [...appointments];
 
     if (searchTerm) {
@@ -106,6 +131,12 @@ const AppointmentTable = () => {
     const getField = (app, field) => {
       if (field === "name") return app.userId?.name?.toLowerCase() || "";
       if (field === "appointmentStatus") return (app.appointmentStatus || "").toLowerCase();
+      if (field === "engineerName") {
+        const engineerId = typeof app.assignedEngineer === 'object' ? app.assignedEngineer?._id : app.assignedEngineer;
+        return engineerId
+          ? (engineers.find(eng => eng._id === engineerId)?.name || "").toLowerCase()
+          : "";
+      }
       return "";
     };
 
@@ -116,7 +147,7 @@ const AppointmentTable = () => {
     });
 
     setFiltered(list);
-  }, [appointments, searchTerm, statusFilter, sortField, sortDirection]);
+  }, [appointments, searchTerm, statusFilter, sortField, sortDirection, engineers]);
 
   const handleSort = field => {
     if (sortField === field) {
@@ -127,38 +158,27 @@ const AppointmentTable = () => {
     }
   };
 
-  const openUpdate = app => {
+  const openActionDialog = app => {
     setSelected(app);
-    setStatus(app.appointmentStatus || "Pending");
-    setOpenDialog(true);
-  };
-  const closeUpdate = () => {
-    setOpenDialog(false);
-    setSelected(null);
-    setStatus("");
+    setStatus(app.appointmentStatus === "Assigned" ? "Pending" : app.appointmentStatus || "Pending");
+    setActionDialogOpen(true);
   };
 
-  const openDelete = app => {
-    setSelected(app);
-    setDeleteDialog(true);
-  };
-  const closeDelete = () => {
-    setDeleteDialog(false);
+  const closeActionDialog = () => {
+    setActionDialogOpen(false);
     setSelected(null);
+    setStatus("Pending");
   };
 
   const handleUpdateStatus = async () => {
     try {
-      // Example, replace with actual method to get user ID
-      console.log("Updating status for appointment:", selected._id,
-        "New status:", status);
-
+      console.log("Updating status for appointment:", selected._id, "New status:", status);
       const response = await axios.put(
         "http://localhost:3000/updateappointment",
         {
           _id: selected._id,
           appointmentStatus: status,
-          userId: userId   // Pass the user ID here
+          userId: userId
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -168,7 +188,7 @@ const AppointmentTable = () => {
         )
       );
       toast.success("Status updated");
-      closeUpdate();
+      closeActionDialog();
     } catch (err) {
       console.log("Error updating status:", err);
       toast.error("Could not update status");
@@ -178,8 +198,6 @@ const AppointmentTable = () => {
   const handleDeleteAppointment = async () => {
     if (!selected) return;
 
-    // Adjust the key if it's different
-
     try {
       await axios.delete(`http://localhost:3000/deleteappointment`, {
         data: { _id: selected._id },
@@ -187,47 +205,49 @@ const AppointmentTable = () => {
           Authorization: `Bearer ${token}`
         }
       });
-
+      setAppointments(prev => prev.filter(app => app._id !== selected._id));
       toast.success("Appointment deleted!");
-      window.location.reload();
-      closeDelete();
+      closeActionDialog();
     } catch (error) {
       console.log(error);
       toast.error("Failed to delete appointment");
     }
   };
 
-  const handleAssignClick = (appointment) => {
-    setSelectedAppointment(appointment);
+  const handleAssignClick = () => {
+    setSelectedAppointment(selected);
+    setSelectedEngineer(typeof selected.assignedEngineer === 'object' ? selected.assignedEngineer?._id : selected.assignedEngineer || '');
+    setActionDialogOpen(false);
     setAssignDialogOpen(true);
   };
 
-  // Update handleAssignSubmit to use the assignWorkToEngineer API
   const handleAssignSubmit = async () => {
     if (!selectedEngineer) {
       toast.error('Please select an engineer');
       return;
     }
 
-    console.log("Assigning task:", {
-      appointmentId: selectedAppointment?._id,
-      userId: selectedEngineer // Updated key to match backend expectation
-    }); // Debugging log
-
     try {
-      // Call the assignWorkToEngineer API
       const response = await axios.post(
         'http://localhost:3000/assign',
         {
           appointmentId: selectedAppointment?._id,
-          userId: selectedEngineer // Updated key to match backend expectation
+          userId: selectedEngineer
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      console.log("Task assigned successfully:", response.data);
+      console.log("Assignment response:", response.data);
+      setAppointments(prev =>
+        prev.map(app =>
+          app._id === selectedAppointment._id
+            ? { ...app, assignedEngineer: selectedEngineer, appointmentStatus: "Pending" }
+            : app
+        )
+      );
       toast.success("Task assigned successfully!");
       setAssignDialogOpen(false);
+      setSelectedEngineer('');
     } catch (error) {
       console.error('Error assigning task:', error);
       toast.error('Failed to assign task');
@@ -241,96 +261,140 @@ const AppointmentTable = () => {
         Appointment Requests
       </Typography>
 
-      <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-        <TextField
-          placeholder="Search..."
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-        />
-        <FormControl>
-          <InputLabel>Status</InputLabel>
-          <Select
-            value={statusFilter}
-            label="Status"
-            onChange={e => setStatusFilter(e.target.value)}
-          >
-            <MenuItem value="all">All</MenuItem>
-            <MenuItem value="Pending">Pending</MenuItem>
-            <MenuItem value="Approved">Approved</MenuItem>
-            <MenuItem value="Completed">Completed</MenuItem>
-            <MenuItem value="Cancelled">Cancelled</MenuItem>
-          </Select>
-        </FormControl>
-      </Box>
+      {appointmentsLoading || engineersLoading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <>
+          <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+            <TextField
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <FormControl>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={statusFilter}
+                label="Status"
+                onChange={e => setStatusFilter(e.target.value)}
+              >
+                <MenuItem value="all">All</MenuItem>
+                <MenuItem value="Pending">Pending</MenuItem>
+                <MenuItem value="Approved">Approved</MenuItem>
+                <MenuItem value="Completed">Completed</MenuItem>
+                <MenuItem value="Cancelled">Cancelled</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Sr. No</TableCell>
-              <TableCell onClick={() => handleSort("name")} sx={{ cursor: "pointer" }}>
-                Customer <SortIcon fontSize="small" />
-              </TableCell>
-              <TableCell>Contact</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Brand</TableCell>
-              <TableCell>Service</TableCell>
-              <TableCell onClick={() => handleSort("appointmentStatus")} sx={{ cursor: "pointer" }}>
-                Status <SortIcon fontSize="small" />
-              </TableCell>
-              <TableCell>Address</TableCell>
-              <TableCell>Message</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filtered.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={10} align="center">
-                  No appointments found.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filtered.map((app, i) => (
-                <TableRow key={app._id}>
-                  <TableCell>{i + 1}</TableCell>
-                  <TableCell>{app.userId?.name || "N/A"}</TableCell>
-                  <TableCell>{app.userId?.mobile}</TableCell>
-                  <TableCell>{app.userId?.email}</TableCell>
-                  <TableCell>{app.deviceBrand}</TableCell>
-                  <TableCell>{app.serviceType}</TableCell>
-                  <TableCell>{app.appointmentStatus}</TableCell>
-                  <TableCell>{app.userId?.address}</TableCell>
-                  <TableCell>{app.problemDescription}</TableCell>
-                  <TableCell>
-                    <IconButton title="Update Status"  color="primary"  onClick={() => openUpdate(app)}>
-                      <Edit />
-                    </IconButton>
-                    <IconButton title="Delete"  color="error"  onClick={() => openDelete(app)}>
-                      <DeleteIcon />
-                    </IconButton>
-                    <IconButton onClick={() => handleAssignClick(app)} color="primary">
-                      <AssignmentIcon />
-                    </IconButton>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Sr. No</TableCell>
+                  <TableCell onClick={() => handleSort("name")} sx={{ cursor: "pointer" }}>
+                    Customer <SortIcon fontSize="small" />
                   </TableCell>
+                  <TableCell>Contact</TableCell>
+                  <TableCell>Email</TableCell>
+                  <TableCell>Brand</TableCell>
+                  <TableCell>Service</TableCell>
+                  <TableCell onClick={() => handleSort("appointmentStatus")} sx={{ cursor: "pointer" }}>
+                    Status <SortIcon fontSize="small" />
+                  </TableCell>
+                  <TableCell onClick={() => handleSort("engineerName")} sx={{ cursor: "pointer" }}>
+                    Assigned Engineer <SortIcon fontSize="small" />
+                  </TableCell>
+                  <TableCell>Address</TableCell>
+                  <TableCell>Message</TableCell>
+                  <TableCell>Actions</TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+              </TableHead>
+              <TableBody>
+                {filtered.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={11} align="center">
+                      No appointments found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filtered.map((app, i) => {
+                    const engineer = app.assignedEngineer
+                      ? engineers.find(eng => eng._id === (typeof app.assignedEngineer === 'object' ? app.assignedEngineer._id : app.assignedEngineer))
+                      : null;
+                    return (
+                      <TableRow key={app._id}>
+                        <TableCell>{i + 1}</TableCell>
+                        <TableCell>{app.userId?.name || "N/A"}</TableCell>
+                        <TableCell>{app.userId?.mobile}</TableCell>
+                        <TableCell>{app.userId?.email}</TableCell>
+                        <TableCell>{app.deviceBrand}</TableCell>
+                        <TableCell>{app.serviceId.serviceType}</TableCell>
+                        <TableCell>{app.appointmentStatus}</TableCell>
+                        <TableCell>
+                          {app.assignedEngineer ? (
+                            <Typography
+                              component="span"
+                              sx={{
+                                color: 'primary.main',
+                                cursor: 'pointer',
+                                textTransform: 'uppercase',
+                                '&:hover': { textDecoration: 'underline' }
+                              }}
+                              onClick={() => engineer && handleOpenDetailsDialog(engineer)}
+                            >
+                              {(typeof app.assignedEngineer === 'object'
+                                ? app.assignedEngineer?.name
+                                : engineers.find(eng => eng._id === app.assignedEngineer)?.name) || "Unassigned"}
+                            </Typography>
+                          ) : (
+                            "Unassigned"
+                          )}
+                        </TableCell>
+                        <TableCell>{app.userId?.address}</TableCell>
+                        <TableCell>{app.problemDescription}</TableCell>
+                        <TableCell>
+                          <IconButton
+                            title="Manage Appointment"
+                            color="primary"
+                            onClick={() => openActionDialog(app)}
+                          >
+                            <SettingsIcon />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </>
+      )}
 
-      {/* Update Dialog */}
-      <Dialog open={openDialog} onClose={closeUpdate} fullWidth maxWidth="sm">
-        <DialogTitle>Update Status</DialogTitle>
+      <Dialog open={actionDialogOpen} onClose={closeActionDialog} fullWidth maxWidth="sm">
+        <DialogTitle>Manage Appointment</DialogTitle>
         <DialogContent>
+          <Typography variant="h6" gutterBottom>Appointment Details</Typography>
+          {selected && (
+            <Box sx={{ mb: 2 }}>
+              <Typography><strong>Customer Name:</strong> {selected.userId?.name}</Typography>
+              <Typography><strong>Contact:</strong> {selected.userId?.mobile}</Typography>
+              <Typography><strong>Email:</strong> {selected.userId?.email}</Typography>
+              <Typography><strong>Service Type:</strong> {selected.serviceId.serviceType|| "NA"}</Typography>
+              <Typography><strong>Device Brand:</strong> {selected.deviceBrand}</Typography>
+              <Typography><strong>Problem Description:</strong> {selected.problemDescription}</Typography>
+            </Box>
+          )}
           <FormControl fullWidth sx={{ mt: 2 }}>
             <InputLabel>Status</InputLabel>
             <Select
@@ -345,27 +409,17 @@ const AppointmentTable = () => {
           </FormControl>
         </DialogContent>
         <DialogActions>
-          <Button onClick={closeUpdate} color="error">Cancel</Button>
-          <Button onClick={handleUpdateStatus} variant="contained">Update</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Delete Dialog */}
-      <Dialog open={deleteDialog} onClose={closeDelete}>
-        <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>
-          Are you sure you want to delete this appointment?
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={closeDelete}>Cancel</Button>
-          <Button variant="contained" color="error" onClick={handleDeleteAppointment}>
+          <Button onClick={closeActionDialog} color="error">Cancel</Button>
+          <Button onClick={handleAssignClick} variant="contained" color="primary">
+            Assign Engineer
+          </Button>
+          <Button onClick={handleDeleteAppointment} variant="contained" color="error">
             Delete
           </Button>
+          <Button onClick={handleUpdateStatus} variant="contained">Update Status</Button>
         </DialogActions>
       </Dialog>
 
-
-      {/* Assign Dialog */}
       <Dialog
         open={assignDialogOpen}
         onClose={() => setAssignDialogOpen(false)}
@@ -380,7 +434,7 @@ const AppointmentTable = () => {
               <Typography><strong>Customer Name:</strong> {selectedAppointment.userId?.name}</Typography>
               <Typography><strong>Contact:</strong> {selectedAppointment.userId?.mobile}</Typography>
               <Typography><strong>Email:</strong> {selectedAppointment.userId?.email}</Typography>
-              <Typography><strong>Service Type:</strong> {selectedAppointment.serviceType}</Typography>
+              <Typography><strong>Service Type:</strong> {selectedAppointment.serviceId.serviceType || 'N/A'}</Typography>
               <Typography><strong>Device Brand:</strong> {selectedAppointment.deviceBrand}</Typography>
               <Typography><strong>Problem Description:</strong> {selectedAppointment.problemDescription}</Typography>
 
@@ -420,6 +474,29 @@ const AppointmentTable = () => {
           >
             Assign
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={openDetailsDialog}
+        onClose={handleCloseDetailsDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Engineer Details</DialogTitle>
+        <DialogContent>
+          {engineerToView ? (
+            <Box>
+              <Typography><strong>Name:</strong> {engineerToView.name}</Typography>
+              <Typography><strong>Email:</strong> {engineerToView.email}</Typography>
+              <Typography><strong>Mobile:</strong> {engineerToView.mobile || "N/A"}</Typography>
+            </Box>
+          ) : (
+            <Typography>No engineer details available.</Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDetailsDialog} variant="contained">Close</Button>
         </DialogActions>
       </Dialog>
     </Box>

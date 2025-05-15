@@ -1,54 +1,24 @@
+import uploadOnCloudinary from "../middleware/cloudInary.js";
 import { Blogs } from "../models/BlogSchema.js";
 
+import fs from "fs";
 
-// const createBlog = async (req, res) => {
-//   console.log("logged user", req.loggedUser);
-//   console.log("req.file", req.file);
-//   try {
-//     const userId = req.loggedUser._id;
-//     console.log("userId", userId);
-//     console.log("req.body", req.body);
-
-
-
-
-//     if (!userId) {
-//       return res.status(400).json({ message: "User ID is required." });
-//     }
-
-//     const user = await User.findById(userId);
-//     if (!user) {
-//       return res.status(404).json({ message: "User not found." });
-//     }
-
-//     if (user.role !== "admin") {
-//       return res.status(403).json({ message: "Only admins can add services." });
-//     }
-
-//     const filepath = req.file.path.replace("/\\/g", "/");
-//     // console.log("file path ", filepath);
-//     const createdBlogs = await Blogs.create({
-//       ...req.body,
-//       blogImage: filepath,
-//     });
-//     // console.log({ message: "added Successfully!..", createdBlogs });
-//     res.status(200).json({ message: "added Successfully !..", createdBlogs });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json({ message: "not added !..", error });
-//   }
-// };
-
+// CREATE BLOG with Cloudinary
 const createBlog = async (req, res) => {
   try {
     const { blogName, blogCategory, uploadedDate, blogDescription } = req.body;
-    const filepath = req.file.path.replace("/\\/g", "/");
-    // console.log("file path ", filepath);
+
+    let imageUrl = null;
+    if (req.file) {
+      imageUrl = await uploadOnCloudinary(req.file.path);
+      fs.unlinkSync(req.file.path); // delete local file
+    }
+
     const createdBlogs = await Blogs.create({
       ...req.body,
-      blogImage: filepath,
+      blogImage: imageUrl, // Cloudinary URL
     });
-    // console.log({ message: "added Successfully!..", createdBlogs });
+
     res.status(200).json({ message: "added Successfully!..", createdBlogs });
   } catch (error) {
     console.log(error);
@@ -56,12 +26,10 @@ const createBlog = async (req, res) => {
   }
 };
 
-
+// GET ALL BLOGS — no change
 const allBlogs = async (req, res) => {
   try {
-    const blogs = await Blogs.find()
-    .populate("userId").
-    sort({ _id: -1 });
+    const blogs = await Blogs.find().populate("userId").sort({ _id: -1 });
     res.status(200).json({ message: "fetch Successfully!..", blogs });
   } catch (error) {
     console.log(error);
@@ -69,6 +37,7 @@ const allBlogs = async (req, res) => {
   }
 };
 
+// UPDATE BLOG with Cloudinary
 const updateBlog = async (req, res) => {
   try {
     const { blogName, blogCategory, blogDescription, _id } = req.body;
@@ -78,17 +47,15 @@ const updateBlog = async (req, res) => {
       blogDescription
     };
 
-    // Handle image update if a new file is uploaded
     if (req.file) {
-      const filepath = req.file.path.replace(/\\/g, "/");
-      updateData.blogImage = filepath;
+      const imageUrl = await uploadOnCloudinary(req.file.path);
+      fs.unlinkSync(req.file.path); // delete local file
+      updateData.blogImage = imageUrl;
     }
 
-    const updatedBlog = await Blogs.findByIdAndUpdate(
-      _id,
-      updateData,
-      { new: true }
-    );
+    const updatedBlog = await Blogs.findByIdAndUpdate(_id, updateData, {
+      new: true,
+    });
 
     if (!updatedBlog) {
       return res.status(404).json({ message: "Blog not found" });
@@ -105,6 +72,7 @@ const updateBlog = async (req, res) => {
   }
 };
 
+// DELETE BLOG — no change
 const deleteBlog = async (req, res) => {
   try {
     const deletedBlog = await Blogs.findByIdAndDelete(req.body._id);

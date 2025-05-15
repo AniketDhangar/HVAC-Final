@@ -4,6 +4,7 @@ import {
   deleteAppointment,
   getAppointments,
   updateAppointment,
+  getMyAppointments
 } from "../Controllers/AppointmentController.js";
 import { authenticateToken, authorizeRoles } from "../middleware/Auth.js";
 import { uploader } from "../middleware/multerUploads.js";
@@ -51,6 +52,7 @@ router.post(
   createAppointment
 );
 router.get("/getappoinments", getAppointments);
+router.get("/myappointments",authenticateToken,getMyAppointments)
 router.put(
   "/updateappointment",
   authenticateToken,
@@ -69,7 +71,7 @@ router.post("/addservice", uploader.single("serviceImage"), addService);
 router.get("/servicesforadmin", getServices);
 router.get("/services", getServices);
 router.delete("/deleteservice", deleteService);
-router.put("/updateservice", updateService);
+router.put("/updateservice",uploader.single("serviceImage"), updateService);
 
 // Blogs
 router.post(

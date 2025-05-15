@@ -1,6 +1,8 @@
 import { Service } from "../models/ServicesSchema.js";
 import { User } from "../models/UserSchema.js";
 
+import uploadOnCloudinary from "../middleware/cloudInary.js";
+import fs from "fs";
 
 const addService = async (req, res) => {
   try {
@@ -19,25 +21,17 @@ const addService = async (req, res) => {
       return res.status(403).json({ message: "Only admins can add services." });
     }
 
-    //here we are getting the file path
-    //we are replacing the backslashes with forward slashes
-    //because the path that we get from the multer is in backslashes
-    //and we need to convert it into forward slashes
-    //because the path that we get from the multer is in backslashes
-    //and we need to convert it into forward slashes
+    let imageUrl = null;
+    if (req.file) {
+      imageUrl = await uploadOnCloudinary(req.file.path);
+      fs.unlinkSync(req.file.path); // delete local file after upload
+    }
 
-    const filepath = req.file.path.replace("/\\/g", "/");
-    // console.log("file path ", filepath);
-    //here we are creating the service
-    //we are using the spread operator to get all the data from the body
-    //and we are adding the file path to the service image
-    //and then we are creating the service
     const addedService = await Service.create({
       ...req.body,
-      serviceImage: filepath,
+      serviceImage: imageUrl,
     });
-    //file path is the path of the image that we uploaded
-    // console.log(addedService);
+
     res.status(200).json({ addedService });
   } catch (error) {
     console.log(error);
@@ -73,23 +67,53 @@ const deleteService = async (req, res) => {
 };
 
 
+// const updateService = async (req, res) => {
+//   const { serviceName, serviceDescription, serviceType, serviceImage } =
+//     req.body;
+
+//   try {
+//     const updatedService = await Service.findByIdAndUpdate(
+//       { _id: req.body.id },
+
+//       { serviceName, serviceDescription, serviceType, serviceImage },
+//       { new: true }
+//     );
+//     if (!updatedService) {
+//       return res.status(404).json({ message: "Service not found" });
+//     }
+//     res.status(200).json({ message: "updated successfully", updatedService });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Error updating service", error });
+//   }
+// };
 const updateService = async (req, res) => {
-  const { serviceName, serviceDescription, serviceType, serviceImage } =
-    req.body;
+  const { serviceName, serviceDescription, serviceType, id } = req.body;
 
   try {
-    const updatedService = await Service.findByIdAndUpdate(
-      { _id: req.body.id },
+    let updateData = {
+      serviceName,
+      serviceDescription,
+      serviceType,
+    };
 
-      { serviceName, serviceDescription, serviceType, serviceImage },
-      { new: true }
-    );
+    if (req.file) {
+      const imageUrl = await uploadOnCloudinary(req.file.path);
+      fs.unlinkSync(req.file.path); // delete local image
+      updateData.serviceImage = imageUrl;
+    }
+
+    const updatedService = await Service.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
+
     if (!updatedService) {
       return res.status(404).json({ message: "Service not found" });
     }
+
     res.status(200).json({ message: "updated successfully", updatedService });
   } catch (error) {
-    console.error(error);
+    console.log(error);
     res.status(500).json({ message: "Error updating service", error });
   }
 };

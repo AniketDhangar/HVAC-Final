@@ -13,32 +13,33 @@ import Loader from './Components/Auth/Loader';
 export const ReloadContext = createContext();
 
 const App = () => {
-  const [reloadTrigger, setReloadTrigger] = useState(false);
-  const [loading, setLoading] = useState(true); // Initially true
+  // const [reloadTrigger, setReloadTrigger] = useState(false);
+  const [loading, setLoading] = useState(true); 
 
   // Simulate loading delay
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 500); 
+    
+    const timer = setTimeout(() => setLoading(false), 1000); 
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    if (reloadTrigger) {
-      window.location.reload();
-    }
-  }, [reloadTrigger]);
+  // useEffect(() => {
+  //   if (reloadTrigger) {
+  //     window.location.reload();
+  //   }
+  // }, [reloadTrigger]);
 
-  const triggerReload = () => {
-    console.log('Triggering project-wide reload');
-    setReloadTrigger(true);
-  };
+  // const triggerReload = () => {
+  //   console.log('Triggering project-wide reload');
+  //   setReloadTrigger(true);
+  // };
 
   if (loading) {
     return <Loader message="Please wait while the app loads..." />;
   }
 
   return (
-    <ReloadContext.Provider value={{ triggerReload }}>
+    // <ReloadContext.Provider value={{ triggerReload }}>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
@@ -73,7 +74,7 @@ const App = () => {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to="/not-found" replace />} />
       </Routes>
-    </ReloadContext.Provider>
+  // </ReloadContext.Provider> 
   );
 };
 

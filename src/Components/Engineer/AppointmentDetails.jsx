@@ -20,6 +20,8 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
 import { Edit as EditIcon } from '@mui/icons-material';
+import Loader from '../Auth/Loader'
+
 
 const AppointmentDetails = () => {
   const { id } = useParams(); // Get appointment ID from route
@@ -112,9 +114,7 @@ const AppointmentDetails = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
-        <CircularProgress />
-      </Box>
+      <><Loader /></>
     );
   }
 
@@ -136,7 +136,7 @@ const AppointmentDetails = () => {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-       <Toaster position="top-right" />
+      <Toaster position="top-right" />
       <Typography variant="h4" gutterBottom>
         Appointment Details
       </Typography>
@@ -200,7 +200,7 @@ const AppointmentDetails = () => {
               <MenuItem value="Approved">Approved</MenuItem>
               <MenuItem value="Completed">Completed</MenuItem>
               <MenuItem value="Cancelled">Cancelled</MenuItem>
-              
+
             </Select>
           </FormControl>
         </DialogContent>

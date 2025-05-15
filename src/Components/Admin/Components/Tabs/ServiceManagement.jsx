@@ -194,22 +194,24 @@ const ServiceManagement = () => {
 
     try {
       if (selectedService) {
-        // Update service
-        try {
-          const reqBody = {
-            id: selectedService._id,
-            serviceName: formFields.serviceName,
-            serviceDescription: formFields.serviceDescription,
-            serviceType: formFields.serviceType
-          }
-          let result = await axios.put("http://localhost:3000/updateservice", reqBody)
-          toast.success("Service updated successfully");
-          window.location.reload(false);
-        } catch (error) {
-          alert("Error in updating", error.message);
-          console.error(error);
+        const updateForm = new FormData();
+        updateForm.append("id", selectedService._id);
+        updateForm.append("serviceName", formFields.serviceName);
+        updateForm.append("serviceDescription", formFields.serviceDescription);
+        updateForm.append("serviceType", formFields.serviceType);
+        if (serviceImage) {
+          updateForm.append("serviceImage", serviceImage);
         }
-      } else {
+        await axios.put("http://localhost:3000/updateservice", updateForm, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            'Authorization': `Bearer ${localStorage.getItem('token')}`, // if token needed
+          },
+        });
+        toast.success("Service updated successfully");
+        window.location.reload(false);
+      }
+      else {
         // Add new service
         await axios.post("http://localhost:3000/addservice", form, {
           headers: {
@@ -369,8 +371,8 @@ const ServiceManagement = () => {
                 <TableCell>{service.serviceDescription}</TableCell>
                 <TableCell>
                   {service.serviceImage && (
-                    <IconButton 
-                      color="primary" 
+                    <IconButton
+                      color="primary"
                       onClick={() => handlePreviewImage(service.serviceImage)}
                       size="small"
                     >
@@ -521,8 +523,8 @@ const ServiceManagement = () => {
           <Button onClick={handleCloseDialog}>Cancel</Button>
           <Button onClick={handleFormSubmit} variant="contained" disabled={loading}>
             {
-            // loading ? <CircularProgress size={24} /> : 
-            (selectedService ? "Update" : "Add")
+              // loading ? <CircularProgress size={24} /> : 
+              (selectedService ? "Update" : "Add")
             }
           </Button>
         </DialogActions>
@@ -547,8 +549,8 @@ const ServiceManagement = () => {
       </Dialog>
 
       {/* Image Preview Dialog */}
-      <Dialog 
-        open={openPreview} 
+      <Dialog
+        open={openPreview}
         onClose={handleClosePreview}
         maxWidth="md"
         fullWidth
@@ -557,14 +559,14 @@ const ServiceManagement = () => {
         <DialogContent>
           {previewImage && (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-              <img 
-                src={previewImage} 
-                alt="Service Preview" 
-                style={{ 
-                  maxWidth: '100%', 
-                  maxHeight: '70vh', 
-                  objectFit: 'contain' 
-                }} 
+              <img
+                src={previewImage}
+                alt="Service Preview"
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '70vh',
+                  objectFit: 'contain'
+                }}
               />
             </Box>
           )}

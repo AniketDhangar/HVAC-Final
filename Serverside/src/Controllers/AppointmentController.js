@@ -11,9 +11,10 @@ const createAppointment = async (req, res) => {
 
     const loggedInUserId = req.loggedUser._id;
 
-   
     if (req.loggedUser.role !== "user") {
-      return res.status(403).json({ message: "Only users can book appointments." });
+      return res
+        .status(403)
+        .json({ message: "Only users can book appointments." });
     }
 
     // const { serviceId } = req.body;
@@ -28,7 +29,9 @@ const createAppointment = async (req, res) => {
     }
 
     if (user.isBlock) {
-      return res.status(403).json({ message: "You are blocked and cannot take appointments." });
+      return res
+        .status(403)
+        .json({ message: "You are blocked and cannot take appointments." });
     }
 
     // Create appointment
@@ -40,73 +43,9 @@ const createAppointment = async (req, res) => {
     res.status(201).json({ appointment });
   } catch (error) {
     console.log("Error:", error);
-    res.status(500).json({ message: "Something went wrong.",error });
+    res.status(500).json({ message: "Something went wrong.", error });
   }
 };
-
-
-// const assignWorkToEngineer = async (req, res) => {
-//   console.log("Logged User:", req.loggedUser);
-//   try {
-//     const { appointmentId, userId } = req.body;
-
-//     // Ensure the logged-in user is available
-//     if (!req.loggedUser || !req.loggedUser.id) {
-//       return res
-//         .status(401)
-//         .json({ message: "Unauthorized: No logged-in user found." });
-//     }
-
-//     const loggedInUserId = req.loggedUser.id;
-
-//     // Validate input
-//     if (!appointmentId || !userId) {
-//       return res
-//         .status(400)
-//         .json({ message: "Appointment ID and Engineer ID are required." });
-//     }
-
-//     // Check if the logged-in user is an admin
-//     const admin = await User.findById(loggedInUserId);
-//     if (!admin || admin.role !== "admin") {
-//       return res.status(403).json({ message: "Only admins can assign work." });
-//     }
-
-//     // Find the engineer
-//     const engineer = await User.findById(userId);
-//     if (!engineer || engineer.role !== "engineer") {
-//       return res
-//         .status(404)
-//         .json({ message: "Engineer not found or not an engineer." });
-//     }
-
-//     // Assign the engineer to the appointment
-//     const appointment = await Appointment.findByIdAndUpdate(
-//       appointmentId,
-//       { assignedEngineer: engineer._id, appointmentStatus: "Assigned" },
-//       { new: true }
-//     );
-
-//     if (!appointment) {
-//       return res.status(404).json({ message: "Appointment not found." });
-//     }
-
-//     // Add appointment to engineer's assignedAppointments array
-//     if (!engineer.assignedAppointments.includes(appointment._id)) {
-//       engineer.assignedAppointments.push(appointment._id);
-//       await engineer.save();
-//     }
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Work assigned successfully!",
-//       appointment,
-//     });
-//   } catch (error) {
-//     console.error("Error assigning work:", error);
-//     res.status(500).json({ message: "Something went wrong.", error });
-//   }
-// };
 
 const getAppointments = async (req, res) => {
   try {
@@ -131,10 +70,9 @@ const getAppointments = async (req, res) => {
 
 const getAppointmentById = async (req, res) => {
   try {
-    const appointment = await Appointment.findById(req.params.id).populate(
-      "assignedEngineer",
-      "name email phone"
-    ).populate("userId")
+    const appointment = await Appointment.findById(req.params.id)
+      .populate("assignedEngineer", "name email phone")
+      .populate("userId");
 
     if (!appointment) {
       return res.status(404).json({
@@ -157,36 +95,39 @@ const getAppointmentById = async (req, res) => {
   }
 };
 
-// const updateAppointment = async (req, res) => {
-//   try {
-//     const appointment = await Appointment.findByIdAndUpdate(
-//       req.params.id,
-//       req.body,
-//       { new: true, runValidators: true }
-//     ).populate("assignedEngineer", "name email phone");
+// GET /myappointments
+const getMyAppointments = async (req, res) => {
+  try {
+    // Since authenticateToken middleware has already set req.loggedUser, we can use it
+    const userId = req.loggedUser._id; // We use _id from loggedUser object attached by middleware
 
-//     if (!appointment) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Appointment not found",
-//       });
-//     }
+    // Find appointments where userId matches the authenticated user's ID
+    const appointments = await Appointment.find({ userId })
+     
+      .populate("assignedEngineer", "name email mobile")
+      .populate("userId")
+      .populate("serviceId")
 
-//     res.status(200).json({
-//       success: true,
-//       message: "Appointment updated successfully",
-//       appointment,
-//     });
-//   } catch (error) {
-//     console.error("Error updating appointment:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Error updating appointment",
-//       error: error.message,
-//     });
-//   }
-// };
+    if (!appointments || appointments.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No appointments found for this user.",
+      });
+    }
 
+    res.status(200).json({
+      success: true,
+      appointments,
+    });
+  } catch (error) {
+    console.log("Error fetching appointments:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching appointments",
+      error: error.message,
+    });
+  }
+};
 
 const updateAppointment = async (req, res) => {
   try {
@@ -287,6 +228,6 @@ export {
   getAppointmentById,
   updateAppointment,
   deleteAppointment,
-  
+  getMyAppointments,
   getEngineerAppointments,
 };
