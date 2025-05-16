@@ -24,7 +24,6 @@ import {
 import { 
   Search as SearchIcon, 
   Close as CloseIcon, 
-  AccessTime, 
   LocationOn,
   ExpandMore as ExpandMoreIcon
 } from '@mui/icons-material';
@@ -71,9 +70,11 @@ const Services = () => {
     const fetchServices = async () => {
       try {
         const response = await axios.get('http://localhost:3000/services');
+        console.log("Services data:", response.data.allServices); // Debug: Log service data
         setServices(response.data.allServices || []);
         setLoading(false);
       } catch (err) {
+        console.error("Error fetching services:", err);
         setError(err);
         setLoading(false);
       }
@@ -85,28 +86,28 @@ const Services = () => {
   // Extract unique categories from services
   const categories = [...new Set(services.map(service => service.serviceType))];
 
-const servicesList = [
-  {
-    title: 'AC Repair & Maintenance',
-    description: 'Professional repair and maintenance services for all AC brands and models. We diagnose and fix issues quickly.',
-    icon: BuildIcon,
-  },
-  {
-    title: 'Emergency Services',
-    description: "24/7 emergency AC repair services. We understand that AC problems don't wait for business hours.",
-    icon: TimelapseIcon,
-  },
-  {
-    title: 'Installation Services',
-    description: 'Expert installation of new AC units with proper sizing and efficiency recommendations.',
-    icon: EngineeringIcon,
-  },
-  {
-    title: 'Preventive Maintenance',
-    description: 'Regular maintenance programs to keep your AC running efficiently and prevent future problems.',
-    icon: AcUnitIcon,
-  },
-];
+  const servicesList = [
+    {
+      title: 'AC Repair & Maintenance',
+      description: 'Professional repair and maintenance services for all AC brands and models. We diagnose and fix issues quickly.',
+      icon: BuildIcon,
+    },
+    {
+      title: 'Emergency Services',
+      description: "24/7 emergency AC repair services. We understand that AC problems don't wait for business hours.",
+      icon: TimelapseIcon,
+    },
+    {
+      title: 'Installation Services',
+      description: 'Expert installation of new AC units with proper sizing and efficiency recommendations.',
+      icon: EngineeringIcon,
+    },
+    {
+      title: 'Preventive Maintenance',
+      description: 'Regular maintenance programs to keep your AC running efficiently and prevent future problems.',
+      icon: AcUnitIcon,
+    },
+  ];
 
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
@@ -132,13 +133,15 @@ const servicesList = [
   };
 
   const filteredServices = (services || []).filter(service => {
-    const matchesSearch = service.serviceName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         service.serviceDescription.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = service.serviceName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         service.serviceDescription?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = selectedTypes.length === 0 || selectedTypes.includes(service.serviceType);
     return matchesSearch && matchesType;
   });
 
   const displayedServices = showAllServices ? filteredServices : filteredServices.slice(0, 3);
+
+  const fallbackImage = 'https://via.placeholder.com/200x200?text=No+Image'; // Fallback image
 
   return (
     <Container maxWidth="lg">
@@ -280,21 +283,18 @@ const servicesList = [
         {/* Dynamic Services Grid */}
         <Grid container spacing={4}>
           {loading ? (
-            // Loading state
             <Grid item xs={12}>
               <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
                 <CircularProgress />
               </Box>
             </Grid>
           ) : error ? (
-            // Error state
             <Grid item xs={12}>
               <Box sx={{ textAlign: 'center', py: 4, color: 'error.main' }}>
                 <Typography>Error loading services. Please try again later.</Typography>
               </Box>
             </Grid>
           ) : (
-            // Services grid
             displayedServices.map((service, index) => (
               <Grid item xs={12} sm={6} md={4} key={service._id || index}>
                 <Zoom in timeout={300} style={{ transitionDelay: `${index * 100}ms` }}>
@@ -302,8 +302,9 @@ const servicesList = [
                     <CardMedia
                       component="img"
                       height="200"
-                      image={`http://localhost:3000/${service.serviceImage}`}
-                      alt={service.serviceName}
+                      image={service.serviceImage || fallbackImage}
+                      alt={service.serviceName || 'Service Image'}
+                      onError={() => console.error("Failed to load service image:", service.serviceImage)}
                       sx={{
                         objectFit: 'cover',
                         transition: 'transform 0.3s ease-in-out',
@@ -325,40 +326,29 @@ const servicesList = [
                             fontSize: '0.8rem',
                           }}
                         />
-        </Box>
-        <Typography
+                      </Box>
+                      <Typography
                         variant="h6" 
-          gutterBottom
-          sx={{
-            fontWeight: 'bold',
+                        gutterBottom
+                        sx={{
+                          fontWeight: 'bold',
                           color: theme.palette.text.primary,
                           mb: 1,
-          }}
-        >
+                        }}
+                      >
                         {service.serviceName}
-        </Typography>
+                      </Typography>
                       <Typography 
                         variant="body2" 
                         color="text.secondary" 
                         paragraph
-                sx={{
+                        sx={{
                           lineHeight: 1.6,
                           mb: 2,
                         }}
                       >
                         {service.serviceDescription}
                       </Typography>
-                      {/* <Box sx={{ 
-                  display: 'flex',
-                        alignItems: 'center', 
-                        color: theme.palette.text.secondary,
-                        mb: 2,
-                      }}>
-                        <AccessTime sx={{ fontSize: 16, mr: 0.5 }} />
-                        <Typography variant="caption">
-                          {service.serviceDuration}
-                        </Typography>
-                      </Box> */}
                     </CardContent>
                     <Box sx={{ p: 2, pt: 0 }}>
                       <Button 
@@ -404,7 +394,7 @@ const servicesList = [
                 fontWeight: 500,
                 color: theme.palette.primary.main,
                 borderColor: theme.palette.primary.main,
-                  '&:hover': {
+                '&:hover': {
                   borderColor: theme.palette.primary.dark,
                   backgroundColor: theme.palette.primary.light,
                   color: theme.palette.primary.dark,
@@ -417,7 +407,7 @@ const servicesList = [
         )}
 
         {/* No Results Message */}
-        {filteredServices.length === 0 && (
+        {filteredServices.length === 0 && !loading && !error && (
           <Box sx={{ 
             textAlign: 'center', 
             py: 8,
@@ -449,7 +439,7 @@ const servicesList = [
             </Typography>
             <IconButton
               onClick={handleCloseDialog}
-                  sx={{
+              sx={{
                 color: theme.palette.grey[500],
                 '&:hover': {
                   color: theme.palette.grey[700],
@@ -462,16 +452,17 @@ const servicesList = [
           <DialogContent dividers>
             <Box sx={{ mb: 3 }}>
               <img
-                src={`http://localhost:3000/${selectedService?.serviceImage}`}
-                alt={selectedService?.serviceName}
+                src={selectedService?.serviceImage || fallbackImage}
+                alt={selectedService?.serviceName || 'Service Image'}
                 style={{
                   width: '100%',
                   height: '300px',
                   objectFit: 'cover',
                   borderRadius: '8px',
                 }}
-                    />
-                  </Box>
+                onError={() => console.error("Failed to load dialog image:", selectedService?.serviceImage)}
+              />
+            </Box>
             <Box sx={{ mb: 3 }}>
               <Chip 
                 label={selectedService?.serviceType} 
@@ -487,17 +478,6 @@ const servicesList = [
               <Typography variant="body1" sx={{ lineHeight: 1.8, mb: 2 }}>
                 {selectedService?.serviceDescription}
               </Typography>
-              {/* <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                color: theme.palette.text.secondary,
-                mb: 1,
-              }}>
-                <AccessTime sx={{ mr: 1 }} />
-                <Typography variant="body2">
-                  Duration: {selectedService?.serviceDuration}
-                  </Typography>
-              </Box> */}
               <Box sx={{ 
                 display: 'flex', 
                 alignItems: 'center', 
@@ -506,7 +486,7 @@ const servicesList = [
                 <LocationOn sx={{ mr: 1 }} />
                 <Typography variant="body2">
                   Service Area: Any
-                  </Typography>
+                </Typography>
               </Box>
             </Box>
           </DialogContent>
@@ -524,7 +504,7 @@ const servicesList = [
             >
               Cancel
             </Button>
-                  <Button
+            <Button
               variant="contained"
               sx={{
                 borderRadius: '25px',
@@ -540,7 +520,7 @@ const servicesList = [
           </DialogActions>
         </ServiceDialog>
       </Box>
-      </Container>
+    </Container>
   );
 };
 

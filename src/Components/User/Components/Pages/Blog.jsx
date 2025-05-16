@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -20,10 +20,8 @@ import {
   DialogActions,
   IconButton
 } from '@mui/material';
-import { Search as SearchIcon, AccessTime, Bookmark, Close as CloseIcon } from '@mui/icons-material';
+import { Search as SearchIcon, Close as CloseIcon } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import { useEffect } from 'react';
-import { useState } from 'react';
 import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -46,80 +44,55 @@ const Blog = () => {
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
 
-  // useEffect(() => {
-  //   const fetchBlogs = async () => {
-  //     try {
-  //       const response = await axios.get("http://localhost:3000/blogs");
-  //       setBlogs(response.data.blogs);
-  //     } catch (error) {
-  //       console.error("Error fetching blogs:", error);
-  //     }
-  //   };
-  //   fetchBlogs();
-  // }, []);
-
-  // Filter blogs based on search query
-
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const token = localStorage.getItem("token"); // Get token if available
-  
-        const headers = token
-          ? { Authorization: `Bearer ${token}` } // Admin case (authenticated)
-          : {}; // User case (public access)
-  
+        const token = localStorage.getItem("token");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
         const response = await axios.get("http://localhost:3000/blogs", { headers });
-  
-        setBlogs(response.data.blogs);
+        console.log("Blogs data:", response.data.blogs); // Debug: Log blog data
+        setBlogs(response.data.blogs || []);
       } catch (error) {
         console.error("Error fetching blogs:", error);
         toast.error("Failed to load blogs. Please try again.");
       }
     };
-  
     fetchBlogs();
   }, []);
-  
+
   const filteredBlogs = blogs.filter(blog =>
-    blog.blogName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    blog.blogCategory.toLowerCase().includes(searchQuery.toLowerCase())
+    blog.blogName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    blog.blogCategory?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Separate featured and regular blogs
   const featuredBlogs = filteredBlogs.filter(post => post.featured);
   const regularBlogs = filteredBlogs.filter(post => !post.featured);
 
-  // Function to handle search
   const handleSearch = (event) => {
     setSearchQuery(event.target.value);
-    setShowAll(false); // Reset show all when searching
+    setShowAll(false);
   };
 
-  // Function to toggle show all blogs
   const handleShowAll = () => {
     setShowAll(!showAll);
   };
 
-  // Function to check if description is long
   const isLongDescription = (description) => {
-    return description.split(' ').length > 14;
+    return description?.split(' ').length > 14;
   };
 
-  // Function to handle dialog open
   const handleOpenDialog = (blog) => {
     setSelectedBlog(blog);
     setOpenDialog(true);
   };
 
-  // Function to handle dialog close
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedBlog(null);
   };
 
-  // Function to get truncated description
   const getTruncatedDescription = (description) => {
+    if (!description) return '';
     const words = description.split(' ');
     if (words.length > 14) {
       return words.slice(0, 14).join(' ') + '...';
@@ -127,10 +100,12 @@ const Blog = () => {
     return description;
   };
 
+  const fallbackImage = 'https://via.placeholder.com/240x240?text=No+Image'; // Fallback image
+
   return (
     <Container maxWidth="lg">
+      <Toaster position="top-right" />
       <Box sx={{ py: 8 }}>
-        {/* Header Section */}
         <Box sx={{ mb: 6, textAlign: 'center' }}>
           <Typography variant="h2" component="h1" gutterBottom>
             AC Repair Blog
@@ -138,8 +113,6 @@ const Blog = () => {
           <Typography variant="h5" color="text.secondary" sx={{ mb: 4 }}>
             Expert tips and insights for AC maintenance and repair
           </Typography>
-
-          {/* Search Bar */}
           <TextField
             fullWidth
             placeholder="Search articles..."
@@ -165,7 +138,6 @@ const Blog = () => {
           />
         </Box>
 
-        {/* Featured Post */}
         {featuredBlogs.map((post, index) => (
           <Card key={index} sx={{
             mb: 6,
@@ -181,8 +153,9 @@ const Blog = () => {
                 <CardMedia
                   component="img"
                   height="400"
-                  image={`http://localhost:3000/${post.blogImage}`}
-                  alt={post.blogName}
+                  image={post.blogImage || fallbackImage}
+                  alt={post.blogName || 'Blog Image'}
+                  onError={() => console.error("Failed to load featured image:", post.blogImage)}
                   sx={{
                     objectFit: 'cover',
                     transition: 'transform 0.3s ease-in-out',
@@ -236,17 +209,6 @@ const Blog = () => {
                   >
                     {getTruncatedDescription(post.blogDescription)}
                   </Typography>
-                  {/* <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    mb: 3,
-                    color: theme.palette.text.secondary,
-                  }}>
-                    <AccessTime sx={{ mr: 1, fontSize: '1.2rem' }} />
-                    <Typography variant="body1">
-                      {post.readTime}
-                    </Typography>
-                  </Box> */}
                   {isLongDescription(post.blogDescription) && (
                     <Button
                       variant="contained"
@@ -275,7 +237,6 @@ const Blog = () => {
 
         <Divider sx={{ my: 6 }} />
 
-        {/* Regular Posts Grid */}
         <Grid container spacing={4}>
           {(showAll ? regularBlogs : regularBlogs.slice(0, 3)).map((post, index) => (
             <Grid item xs={12} md={4} key={index}>
@@ -291,8 +252,9 @@ const Blog = () => {
                 <CardMedia
                   component="img"
                   height="240"
-                  image={`http://localhost:3000/${post.blogImage}`}
-                  alt={post.blogName}
+                  image={post.blogImage || fallbackImage}
+                  alt={post.blogName || 'Blog Image'}
+                  onError={() => console.error("Failed to load regular image:", post.blogImage)}
                   sx={{
                     transition: 'transform 0.3s ease-in-out',
                     '&:hover': {
@@ -333,12 +295,6 @@ const Blog = () => {
                     <Typography variant="caption">
                       {post.uploadedDate}
                     </Typography>
-                    {/* <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <AccessTime sx={{ fontSize: 16, mr: 0.5 }} />
-                        <Typography variant="caption">
-                          {post.readTime}
-                        </Typography>
-                      </Box> */}
                   </Box>
                 </CardContent>
                 {isLongDescription(post.blogDescription) && (
@@ -366,7 +322,6 @@ const Blog = () => {
           ))}
         </Grid>
 
-        {/* Show More Button */}
         {regularBlogs.length > 3 && (
           <Box sx={{ textAlign: 'center', mt: 6 }}>
             <Button
@@ -390,7 +345,6 @@ const Blog = () => {
           </Box>
         )}
 
-        {/* No Results Message */}
         {filteredBlogs.length === 0 && (
           <Box sx={{ textAlign: 'center', mt: 4 }}>
             <Typography variant="h6" color="text.secondary">
@@ -399,7 +353,6 @@ const Blog = () => {
           </Box>
         )}
 
-        {/* Blog Dialog */}
         <Dialog
           open={openDialog}
           onClose={handleCloseDialog}
@@ -436,14 +389,15 @@ const Blog = () => {
           <DialogContent dividers>
             <Box sx={{ mb: 3 }}>
               <img
-                src={`http://localhost:3000/${selectedBlog?.blogImage}`}
-                alt={selectedBlog?.blogName}
+                src={selectedBlog?.blogImage || fallbackImage}
+                alt={selectedBlog?.blogName || 'Blog Image'}
                 style={{
                   width: '100%',
                   height: '300px',
                   objectFit: 'cover',
                   borderRadius: '8px',
                 }}
+                onError={() => console.error("Failed to load dialog image:", selectedBlog?.blogImage)}
               />
             </Box>
             <Typography variant="body1" sx={{ lineHeight: 1.8 }}>

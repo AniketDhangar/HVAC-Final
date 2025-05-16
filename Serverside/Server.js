@@ -3,7 +3,7 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
-import { connectDB } from "./src/Database/Database.js";
+import { connectDB } from "./src/Config/Database.js";
 import router from "./src/Routes/authRouter.js";
 import { authenticateToken } from "./src/middleware/Auth.js";
 import path from "path";
