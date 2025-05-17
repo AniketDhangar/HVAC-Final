@@ -32,6 +32,7 @@ import {
 } from "@mui/icons-material";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
+const REACT_BASE_URL = "http://localhost:3000" 
 
 const BlogsManagement = () => {
   const [blogs, setBlogs] = useState([]);
@@ -94,14 +95,14 @@ const BlogsManagement = () => {
     setLoading(true);
     try {
 
-      const response = await axios.get("http://localhost:3000/blogsforadmin", {
+      const response = await axios.get(`${REACT_BASE_URL}/blogsforadmin`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setBlogs(response.data.blogs);
       setFilteredBlogs(response.data.blogs);
       toast.success("Blogs fetched successfully");
     } catch (error) {
-      console.error("Error fetching blogs:", error);
+      console.log("Error fetching blogs:", error);
       toast.error("Failed to fetch blogs");
     } finally {
       setLoading(false);
@@ -185,16 +186,7 @@ const BlogsManagement = () => {
     }
   };
 
-  // Improved error handler
-  const handleApiError = (error) => {
-    if (error.response) {
-      toast.error(error.response.data.message || `Error: ${error.response.status}`);
-    } else if (error.request) {
-      toast.error("Network error. Please check your connection.");
-    } else {
-      toast.error("An unexpected error occurred.");
-    }
-  };
+
 
   // Handle form submit (add/edit)
   const handleFormSubmit = async (e) => {
@@ -215,7 +207,7 @@ const BlogsManagement = () => {
           form.append("blogImage", formData.blogImage);
         }
         
-        const response = await axios.put("http://localhost:3000/updateblog", form, {
+        const response = await axios.put(`${REACT_BASE_URL}/updateblog`, form, {
           headers: { 
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
@@ -236,7 +228,7 @@ const BlogsManagement = () => {
         }
         form.append("blogImage", formData.blogImage);
         
-        const response = await axios.post("http://localhost:3000/addblogs", form, {
+        const response = await axios.post(`${REACT_BASE_URL}/addblogs`, form, {
           headers: { 
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
@@ -250,7 +242,7 @@ const BlogsManagement = () => {
         }
       }
     } catch (error) {
-      console.error("Error:", error);
+      console.log("Error:", error);
       if (error.response) {
         toast.error(error.response.data.message || "An error occurred");
       } else {
@@ -273,7 +265,7 @@ const BlogsManagement = () => {
 
   const handleDeleteConfirmed = async () => {
     try {
-      await axios.delete(`http://localhost:3000/deleteblog`, {
+      await axios.delete(`${REACT_BASE_URL}/deleteblog`, {
         data: { _id: blogToDelete },
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -291,7 +283,7 @@ const BlogsManagement = () => {
     // Convert relative path to full URL
     const fullImageUrl = imageUrl.startsWith('http') 
       ? imageUrl 
-      : `http://localhost:3000/${imageUrl.replace(/\\/g, '/')}`;
+      : `${REACT_BASE_URL}/${imageUrl.replace(/\\/g, '/')}`;
     setPreviewImage(fullImageUrl);
     setOpenPreview(true);
   };
@@ -335,6 +327,7 @@ const BlogsManagement = () => {
             <Table>
               <TableHead>
                 <TableRow>
+                  <TableCell>Sr.No</TableCell>
                   <TableCell onClick={() => handleSort("blogName")}>Name {sortField === "blogName" && (sortDirection === "asc" ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />)}</TableCell>
                   <TableCell onClick={() => handleSort("blogCategory")}>Category {sortField === "blogCategory" && (sortDirection === "asc" ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />)}</TableCell>
                   <TableCell>Description</TableCell>
@@ -343,8 +336,9 @@ const BlogsManagement = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredBlogs.map((blog) => (
+                {filteredBlogs.map((blog,index) => (
                   <TableRow key={blog._id}>
+                     <TableCell>{index+1}</TableCell>
                     <TableCell>{blog.blogName}</TableCell>
                     <TableCell>{blog.blogCategory}</TableCell>
                     <TableCell>{blog.blogDescription}</TableCell>

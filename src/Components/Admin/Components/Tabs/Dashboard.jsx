@@ -16,6 +16,8 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 const COLORS = ['#4CAF50', '#2196F3', '#FFC107', '#F44336'];
+const REACT_BASE_URL = "http://localhost:3000" 
+
 
 const Dashboard = () => {
     const theme = useTheme();
@@ -45,19 +47,19 @@ const Dashboard = () => {
             }
 
             // Fetch all data from /dashboard
-            const response = await axios.get('http://localhost:3000/dashboard', {
+            const response = await axios.get(`${REACT_BASE_URL}/dashboard`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
             const { data } = await axios.get(
-                "http://localhost:3000/getappoinments",
+                `${REACT_BASE_URL}/getappoinments`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             const list = data.appointments || [];
             setAppointments(list);
             console.log("appointments", data.appointments)
             console.log("user", data.appointments)
-            // console.log("appointments", data.appointments)
+            console.log("appointments", data.appointments.appointmentStatus)
             const { appointmentCount, serviceCount, blogsCount } = response.data.data;
 
             // Process appointment status
@@ -193,11 +195,12 @@ const Dashboard = () => {
                         <ResponsiveContainer width="100%" height={300}>
                             <PieChart>
                                 <Pie
-                                    data={[
+                                    data={[     
                                         { name: "Completed", value: stats.appointmentStatus.Completed },
                                         { name: "Pending", value: stats.appointmentStatus.Pending },
                                         { name: "Approved", value: stats.appointmentStatus.Approved },
-                                        { name: "Cancelled", value: stats.appointmentStatus.Cancelled }
+                                        { name: "Cancelled", value: stats.appointmentStatus.Cancelled },
+                                        
                                     ]}
                                     cx="50%"
                                     cy="50%"

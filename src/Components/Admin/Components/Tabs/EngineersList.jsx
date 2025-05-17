@@ -33,6 +33,10 @@ import { Toaster, toast } from 'react-hot-toast';
 import { EditNotificationsOutlined } from '@mui/icons-material';
 import EditSharpIcon from '@mui/icons-material/EditSharp';
 
+
+const REACT_BASE_URL = "http://localhost:3000" 
+
+
 const EngineersList = () => {
   const [engineers, setEngineers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -60,7 +64,7 @@ const EngineersList = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [orderBy, setOrderBy] = useState('name');
   const [order, setOrder] = useState('asc');
-const [engineerForPasswordUpdate, setEngineerForPasswordUpdate] = useState(null);
+  const [engineerForPasswordUpdate, setEngineerForPasswordUpdate] = useState(null);
 
   useEffect(() => {
     fetchEngineers();
@@ -70,7 +74,7 @@ const [engineerForPasswordUpdate, setEngineerForPasswordUpdate] = useState(null)
     try {
       const token = localStorage.getItem('accessToken');
       console.log('Fetching engineers with token:', token ? 'Present' : 'Missing');
-      const response = await axios.get('http://localhost:3000/getengineers', {
+      const response = await axios.get(`${REACT_BASE_URL}/getengineers`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -95,7 +99,7 @@ const [engineerForPasswordUpdate, setEngineerForPasswordUpdate] = useState(null)
     try {
       const token = localStorage.getItem('accessToken');
       console.log('Fetching all engineer tasks with token:', token ? 'Present' : 'Missing');
-      const response = await axios.get('http://localhost:3000/getEngineerTasks', {
+      const response = await axios.get(`${REACT_BASE_URL}/getEngineerTasks`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -133,7 +137,7 @@ const [engineerForPasswordUpdate, setEngineerForPasswordUpdate] = useState(null)
       }
 
       console.log('Deleting engineer with ID:', engineerToDelete._id);
-      const response = await axios.delete('http://localhost:3000/deleteuser', {
+      const response = await axios.delete(`${REACT_BASE_URL}/deleteuser`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -207,7 +211,7 @@ const [engineerForPasswordUpdate, setEngineerForPasswordUpdate] = useState(null)
       }
       const token = localStorage.getItem('accessToken');
       await axios.post(
-        'http://localhost:3000/register',
+        `${REACT_BASE_URL}/register`,
         {
           ...formData,
           role: 'engineer',
@@ -238,7 +242,7 @@ const [engineerForPasswordUpdate, setEngineerForPasswordUpdate] = useState(null)
 
 
   const updatePasswordReq = async () => {
-    
+
     const loggedInUserId = (localStorage.getItem("userId"))
     if (!selectedEngineerId || !selectedEngineerId._id) {
       toast.error("No engineer selected");
@@ -252,7 +256,7 @@ const [engineerForPasswordUpdate, setEngineerForPasswordUpdate] = useState(null)
         userId: loggedInUserId, // <-- Add this!
       };
 
-      const response = await axios.put("http://localhost:3000/users", reqBody);
+      const response = await axios.put(`${REACT_BASE_URL}/users`, reqBody);
       toast.success("Password updated");
       handleCloseUpdate();
     } catch (error) {
@@ -330,15 +334,19 @@ const [engineerForPasswordUpdate, setEngineerForPasswordUpdate] = useState(null)
           <Table>
             <TableHead>
               <TableRow>
-                {['name', 'email', 'mobile'].map((col) => (
-                  <TableCell
-                    key={col}
-                    onClick={() => handleSort(col)}
-                    sx={{ fontWeight: 'bold', cursor: 'pointer' }}
-                  >
-                    {col.charAt(0).toUpperCase() + col.slice(1)}
-                    {orderBy === col ? (order === 'asc' ? ' 🔼' : ' 🔽') : ''}
-                  </TableCell>
+
+                {['sr.no','name', 'email', 'mobile'].map((col, index) => (
+                  
+                    <TableCell
+                      key={col}
+                      onClick={() => handleSort(col)}
+                      sx={{ fontWeight: 'bold', cursor: 'pointer' }}
+                    >
+                      {col.charAt(0).toUpperCase() + col.slice(1)}
+                      {orderBy === col ? (order === 'asc' ? ' 🔼' : ' 🔽') : ''}
+                    </TableCell>
+                  
+
                 ))}
                 <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Actions</TableCell>
@@ -346,11 +354,14 @@ const [engineerForPasswordUpdate, setEngineerForPasswordUpdate] = useState(null)
             </TableHead>
             <TableBody>
               {filteredAndSortedEngineers.length > 0 ? (
-                filteredAndSortedEngineers.map((engineer) => (
+                filteredAndSortedEngineers.map((engineer,index) => (
+
                   <TableRow
                     key={engineer._id}
                     sx={{ '&:hover': { backgroundColor: 'gray' }, transition: '0.3s' }}
-                  >
+                  >                    
+                  <TableCell>{index +1}</TableCell>
+
                     <TableCell>{engineer.name}</TableCell>
                     <TableCell>{engineer.email}</TableCell>
                     <TableCell>{engineer.mobile}</TableCell>

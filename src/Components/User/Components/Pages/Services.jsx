@@ -35,6 +35,8 @@ import { styled } from '@mui/material/styles';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+const REACT_BASE_URL = "http://localhost:3000" 
+
 const StyledCard = styled(Card)(({ theme }) => ({
   height: '100%',
   display: 'flex',
@@ -66,10 +68,14 @@ const Services = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+
+
+
+
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/services');
+        const response = await axios.get(`${REACT_BASE_URL}/services`);
         console.log("Services data:", response.data.allServices); // Debug: Log service data
         setServices(response.data.allServices || []);
         setLoading(false);

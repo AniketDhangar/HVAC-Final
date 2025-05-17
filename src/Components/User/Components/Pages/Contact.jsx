@@ -10,6 +10,8 @@ import {
 import axios from 'axios';
 import toast, { Toaster } from "react-hot-toast";
 
+const REACT_BASE_URL = "http://localhost:3000" 
+
 const Contact = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -29,7 +31,7 @@ const Contact = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const responce = await axios.post("http://localhost:3000/addcontacts",
+      const responce = await axios.post(`${REACT_BASE_URL}/addcontacts`,
         formData)
       console.log(responce.data)
       toast.success("you request is sent successfully");

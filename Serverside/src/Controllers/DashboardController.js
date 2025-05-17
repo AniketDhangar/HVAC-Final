@@ -17,7 +17,7 @@ const DashboardCollection = async (req, res) => {
     res.status(200).json({ data: counter });
   } catch (error) {
     res.status(500).json({ error: error.message });
-    console.error(error);
+    console.log(error);
   }
 };
 

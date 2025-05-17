@@ -25,6 +25,8 @@ import { styled } from '@mui/material/styles';
 import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
 
+const REACT_BASE_URL = "http://localhost:3000"
+
 const StyledCard = styled(Card)(({ theme }) => ({
   height: '100%',
   display: 'flex',
@@ -49,7 +51,7 @@ const Blog = () => {
       try {
         const token = localStorage.getItem("token");
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const response = await axios.get("http://localhost:3000/blogs", { headers });
+        const response = await axios.get(`${REACT_BASE_URL}/blogs`, { headers });
         console.log("Blogs data:", response.data.blogs); // Debug: Log blog data
         setBlogs(response.data.blogs || []);
       } catch (error) {

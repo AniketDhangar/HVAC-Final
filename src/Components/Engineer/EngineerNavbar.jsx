@@ -27,17 +27,6 @@ import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
 
 const drawerWidth = 280;
 
-// const menuItems = [
-//   { text: 'Home', icon: <HomeIcon />, path: 'home' },
-//   { text: 'About Us', icon: <InfoIcon />, path: 'about' },
-//   { text: 'Our Services', icon: <CleaningServicesIcon />, path: 'services' },
-//   { text: 'Our Blogs', icon: <BookTwoToneIcon />, path: 'blogs' },
-//   { text: 'Contact Us ', icon: <ContactMailIcon />, path: 'contact' },
-//   { text: 'Profile', icon: <ContactMailIcon />, path: 'profile' },
-
-
-// ];
-
 
 const menuItems = [
   { text: 'Dashboard', icon: <HomeIcon />, path: '/engineer/dashboard' },

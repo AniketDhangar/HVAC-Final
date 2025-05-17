@@ -1,192 +1,128 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  Container,
-  Paper,
-  Typography,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  MenuItem,
-  Box,
-  IconButton,
-  CircularProgress,
-  InputAdornment,
-  Select,
-  FormControl,
-  InputLabel,
-  Fade,
-  Tooltip,
+  Container, Paper, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Box, IconButton, CircularProgress,
+  InputAdornment, Select, FormControl, InputLabel, Tooltip
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, ArrowUpward as ArrowUpwardIcon, ArrowDownward as ArrowDownwardIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
 import axios from 'axios';
 import toast, { Toaster } from "react-hot-toast";
 
+const REACT_BASE_URL = "http://localhost:3000";
+
 const ServiceManagement = () => {
   const [services, setServices] = useState([]);
-  const [filteredServices, setFilteredServices] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
   const [loading, setLoading] = useState(false);
   const [serviceImage, setServiceImage] = useState(null);
   const [openDelete, setOpenDelete] = useState(false);
-  const [description, setDescription] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [sortField, setSortField] = useState("serviceName");
-  const [sortDirection, setSortDirection] = useState("asc");
-  const [serviceType, setserviceType] = useState("");
-  // Local state for form fields (for add/edit)
-  const [formFields, setFormFields] = useState({
-    serviceName: "",
-    serviceDescription: "",
-    serviceType: "",
-  });
-  const [previewImage, setPreviewImage] = useState(null);
   const [openPreview, setOpenPreview] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [state, setState] = useState({
+    searchTerm: "",
+    typeFilter: "all",
+    sortField: "serviceName",
+    sortDirection: "asc",
+    formFields: { serviceName: "", serviceDescription: "", serviceType: "" }
+  });
 
-  // Fetch services on mount
-  useEffect(() => {
-    fetchServices();
-  }, []);
-
-  // Handle Search and Filter
-  useEffect(() => {
-    let filtered = [...services];
-
-    // Apply search filter
-    if (searchTerm) {
-      filtered = filtered.filter(service =>
-        service.serviceName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.serviceDescription?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.serviceType?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Apply type filter
-    if (typeFilter !== "all") {
-      filtered = filtered.filter(service => service.serviceType === typeFilter);
-    }
-
-    // Apply sorting
-    filtered.sort((a, b) => {
-      const aValue = a[sortField]?.toLowerCase() || "";
-      const bValue = b[sortField]?.toLowerCase() || "";
-      return sortDirection === "asc"
-        ? aValue.localeCompare(bValue)
-        : bValue.localeCompare(aValue);
-    });
-
-    setFilteredServices(filtered);
-  }, [services, searchTerm, typeFilter, sortField, sortDirection]);
-
-  // Handle sort
-  const handleSort = (field) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortDirection("asc");
-    }
-  };
-
-  // const fetchServices = async () => {
-  //   try {
-  //     const response = await axios.get('http://localhost:3000/servicesforadmin');
-  //     setServices(response.data.allServices);
-  //     setFilteredServices(response.data.allServices);
-  //     toast.success("Services fetched successfully");
-  //   } catch (error) {
-  //     console.error("Error fetching services:", error);
-  //     toast.error("Failed to fetch services");
-  //   }
-  // };
-
-  // Handle form field changes
-  const fetchServices = async () => {
+  const fetchServices = useCallback(async () => {
     try {
-      const token = localStorage.getItem("token"); // Get token if available
-
-      const endpoint = token
-        ? "http://localhost:3000/servicesforadmin" // Admin route (requires token)
-        : "http://localhost:3000/services"; // Public route for users
-
+      const token = localStorage.getItem("accessToken");
+      const endpoint = token ? `${REACT_BASE_URL}/servicesforadmin` : `${REACT_BASE_URL}/services`;
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
       const response = await axios.get(endpoint, { headers });
-
       setServices(response.data.allServices);
-      setFilteredServices(response.data.allServices);
       toast.success("Services fetched successfully");
     } catch (error) {
-      console.error("Error fetching services:", error);
       toast.error("Failed to fetch services");
     }
-  };
+  }, []);
 
-  const handleFieldChange = (e) => {
-    const { name, value } = e.target;
-    // For description, enforce a 150 character limit
-    if (name === "serviceDescription") {
-      if (value.length > 150) return;
-      setDescription(value);
+  useEffect(() => {
+    fetchServices();
+  }, [fetchServices]);
+
+  const filteredServices = useMemo(() => {
+    let filtered = [...services];
+    if (state.searchTerm) {
+      filtered = filtered.filter(service =>
+        service.serviceName?.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
+        service.serviceDescription?.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
+        service.serviceType?.toLowerCase().includes(state.searchTerm.toLowerCase())
+      );
     }
-    setFormFields({ ...formFields, [name]: value });
-  };
+    if (state.typeFilter !== "all") {
+      filtered = filtered.filter(service => service.serviceType === state.typeFilter);
+    }
+    filtered.sort((a, b) => {
+      const aValue = a[state.sortField]?.toLowerCase() || "";
+      const bValue = b[state.sortField]?.toLowerCase() || "";
+      return state.sortDirection === "asc" ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+    });
+    return filtered;
+  }, [services, state.searchTerm, state.typeFilter, state.sortField, state.sortDirection]);
 
-  // Open Add/Edit Dialog; if service provided, we're editing
-  const handleOpenDialog = (service = null) => {
+  const handleSort = useCallback((field) => {
+    setState(prev => ({
+      ...prev,
+      sortField: field,
+      sortDirection: prev.sortField === field && prev.sortDirection === "asc" ? "desc" : "asc"
+    }));
+  }, []);
+
+  const handleFieldChange = useCallback((e) => {
+    const { name, value } = e.target;
+    if (name === "serviceDescription" && value.length > 150) return;
+    setState(prev => ({
+      ...prev,
+      formFields: { ...prev.formFields, [name]: value }
+    }));
+  }, []);
+
+  const handleOpenDialog = useCallback((service = null) => {
     if (service) {
       setSelectedService(service);
-      setFormFields({
-        serviceName: service.serviceName || "",
-        serviceDescription: service.serviceDescription || "",
-        serviceType: service.serviceType || "",
-      });
-      setDescription(service.serviceDescription || "");
+      setState(prev => ({
+        ...prev,
+        formFields: {
+          serviceName: service.serviceName || "",
+          serviceDescription: service.serviceDescription || "",
+          serviceType: service.serviceType || ""
+        }
+      }));
       setServiceImage(null);
     } else {
       setSelectedService(null);
-      setFormFields({
-        serviceName: "",
-        serviceDescription: "",
-        serviceType: "",
-      });
-      setDescription("");
+      setState(prev => ({
+        ...prev,
+        formFields: { serviceName: "", serviceDescription: "", serviceType: "" }
+      }));
       setServiceImage(null);
     }
     setOpenDialog(true);
-  };
+  }, []);
 
-  const handleCloseDialog = () => {
+  const handleCloseDialog = useCallback(() => {
     setOpenDialog(false);
     setSelectedService(null);
-  };
+    setServiceImage(null);
+  }, []);
 
-  // Handle Add/Edit form submission
-  const handleFormSubmit = async (e) => {
+  const handleFormSubmit = useCallback(async (e) => {
     e.preventDefault();
-    setLoading(true);
-    const form = new FormData();
-
-
-    form.append("serviceName", formFields.serviceName);
-    form.append("serviceDescription", formFields.serviceDescription);
-    form.append("serviceType", formFields.serviceType);
-    const userId = localStorage.getItem('userId'); // Get userId from localStorage
+    const userId = localStorage.getItem('userId');
     if (!userId) {
-      toast.error("User ID not found in localStorage");
+      toast.error("User ID not found");
+      setLoading(false);
       return;
     }
-    // Append userId to form data
+    setLoading(true);
+    const form = new FormData();
+    form.append("serviceName", state.formFields.serviceName);
+    form.append("serviceDescription", state.formFields.serviceDescription);
+    form.append("serviceType", state.formFields.serviceType);
     form.append("userId", userId);
     if (serviceImage) {
       form.append("serviceImage", serviceImage);
@@ -196,109 +132,95 @@ const ServiceManagement = () => {
       if (selectedService) {
         const updateForm = new FormData();
         updateForm.append("id", selectedService._id);
-        updateForm.append("serviceName", formFields.serviceName);
-        updateForm.append("serviceDescription", formFields.serviceDescription);
-        updateForm.append("serviceType", formFields.serviceType);
+        updateForm.append("serviceName", state.formFields.serviceName);
+        updateForm.append("serviceDescription", state.formFields.serviceDescription);
+        updateForm.append("serviceType", state.formFields.serviceType);
         if (serviceImage) {
           updateForm.append("serviceImage", serviceImage);
         }
-        await axios.put("http://localhost:3000/updateservice", updateForm, {
+        await axios.put(`${REACT_BASE_URL}/updateservice`, updateForm, {
           headers: {
             "Content-Type": "multipart/form-data",
-            'Authorization': `Bearer ${localStorage.getItem('token')}`, // if token needed
-          },
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          }
         });
         toast.success("Service updated successfully");
-        window.location.reload(false);
-      }
-      else {
-        // Add new service
-        await axios.post("http://localhost:3000/addservice", form, {
+      } else {
+        await axios.post(`${REACT_BASE_URL}/addservice`, form, {
           headers: {
             "Content-Type": "multipart/form-data",
-            'Authorization': `Bearer ${localStorage.getItem('token')}` // Include token if available
-          },
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          }
         });
         toast.success("Service added successfully");
       }
       handleCloseDialog();
       fetchServices();
     } catch (error) {
-      console.error("Error saving service:", error);
       toast.error("Failed to save service");
     } finally {
       setLoading(false);
     }
-  };
+  }, [state.formFields, serviceImage, selectedService, fetchServices, handleCloseDialog]);
 
-  // Open Delete Confirmation Dialog
-  const handleDeleteOpen = (service) => {
+  const handleDeleteOpen = useCallback((service) => {
     setSelectedService(service);
     setOpenDelete(true);
-  };
+  }, []);
 
-  const handleDeleteClose = () => {
+  const handleDeleteClose = useCallback(() => {
     setOpenDelete(false);
     setSelectedService(null);
-  };
+  }, []);
 
-  const deleteService = async () => {
+  const deleteService = useCallback(async () => {
     try {
-      await axios.delete(`http://localhost:3000/deleteservice`, {
+      await axios.delete(`${REACT_BASE_URL}/deleteservice`, {
         data: { _id: selectedService._id }
       });
       toast.success("Service deleted successfully");
-      setServices(services.filter((s) => s._id !== selectedService._id));
-    } catch (error) {
-      console.error("Error deleting service:", error);
-      toast.error("Failed to delete service");
-    } finally {
+      setServices(prev => prev.filter((s) => s._id !== selectedService._id));
       handleDeleteClose();
+    } catch (error) {
+      toast.error("Failed to delete service");
     }
-  };
+  }, [selectedService, handleDeleteClose]);
 
-  const handlePreviewImage = (imageUrl) => {
-    // Convert relative path to full URL
-    const fullImageUrl = imageUrl.startsWith('http') 
-      ? imageUrl 
-      : `http://localhost:3000/${imageUrl.replace(/\\/g, '/')}`;
+  const handlePreviewImage = useCallback((imageUrl) => {
+    const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : `${REACT_BASE_URL}/${imageUrl.replace(/\\/g, '/')}`;
     setPreviewImage(fullImageUrl);
     setOpenPreview(true);
-  };
+  }, []);
 
-  const handleClosePreview = () => {
+  const handleClosePreview = useCallback(() => {
     setOpenPreview(false);
     setPreviewImage(null);
-  };
+  }, []);
 
   return (
     <Paper sx={{ p: 2, m: 2, mt: 3, boxShadow: 3, borderRadius: 2 }}>
       <Toaster position="top-right" />
-      <Typography variant="h4" gutterBottom>
-        Service Management
-      </Typography>
-
-      {/* Search and Filter Section */}
+      <Typography variant="h4" gutterBottom>Service Management</Typography>
       <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
         <TextField
           placeholder="Search services..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          value={state.searchTerm}
+          onChange={(e) => setState(prev => ({ ...prev, searchTerm: e.target.value }))}
           sx={{ minWidth: 300 }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
                 <SearchIcon />
               </InputAdornment>
-            ),
+            )
           }}
         />
         <FormControl sx={{ minWidth: 200 }}>
           <InputLabel>Service Type Filter</InputLabel>
           <Select
-            value={typeFilter}
+            value={state.typeFilter}
             label="Service Type Filter"
-            onChange={(e) => setTypeFilter(e.target.value)}
+            onChange={(e) => setState(prev => ({ ...prev, typeFilter: e.target.value }))}
           >
             <MenuItem value="all">All Types</MenuItem>
             <MenuItem value="Installation">Installation</MenuItem>
@@ -313,17 +235,16 @@ const ServiceManagement = () => {
           Add New Service
         </Button>
       </Box>
-
       <TableContainer>
         <Table>
           <TableHead sx={{ backgroundColor: 'inherit' }}>
-            <TableRow >
+            <TableRow>
               <TableCell sx={{ fontWeight: 'bold' }}>Serial No.</TableCell>
               <TableCell>
                 <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => handleSort("serviceName")}>
                   <b>Service Name</b>
-                  {sortField === "serviceName" ? (
-                    sortDirection === "asc" ? (
+                  {state.sortField === "serviceName" ? (
+                    state.sortDirection === "asc" ? (
                       <Tooltip title="Sorting A to Z">
                         <ArrowUpwardIcon sx={{ ml: 1, fontSize: 20 }} />
                       </Tooltip>
@@ -342,8 +263,8 @@ const ServiceManagement = () => {
               <TableCell>
                 <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => handleSort("serviceType")}>
                   <b>Type</b>
-                  {sortField === "serviceType" ? (
-                    sortDirection === "asc" ? (
+                  {state.sortField === "serviceType" ? (
+                    state.sortDirection === "asc" ? (
                       <Tooltip title="Sorting A to Z">
                         <ArrowUpwardIcon sx={{ ml: 1, fontSize: 20 }} />
                       </Tooltip>
@@ -395,78 +316,6 @@ const ServiceManagement = () => {
           </TableBody>
         </Table>
       </TableContainer>
-
-      {/* Add/Edit Service Dialog */}
-      {/* <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>{selectedService ? "Edit Service" : "Add New Service"}</DialogTitle>
-        <form onSubmit={handleFormSubmit}>
-          <DialogContent>
-            <TextField
-              name="serviceName"
-              label="Service Name"
-              fullWidth
-              required
-              margin="normal"
-              value={formFields.serviceName}
-              onChange={handleFieldChange}
-            />
-            <TextField
-              name="serviceDescription"
-              label="Description"
-              fullWidth
-              required
-              multiline
-              rows={3}
-              margin="normal"
-              value={formFields.serviceDescription}
-              onChange={handleFieldChange}
-              helperText={`${description.length}/150 characters`}
-              inputProps={{ maxLength: 150 }}
-            />
-            {/* <TextField
-              name="serviceType"
-              label="Service Type"
-              fullWidth
-              required
-              margin="normal"
-              value={formFields.serviceType}
-              onChange={handleFieldChange}
-            /> 
-            <TextField select fullWidth required name="serviceType" margin="normal" value={formFields.serviceType}
-              onChange={handleFieldChange}
-              label="Service Type"
-            >
-              <MenuItem value="Repair">Repair</MenuItem>
-              <MenuItem value="Installation">Installation</MenuItem>
-              <MenuItem value="Service">Service</MenuItem>
-              <MenuItem value="Heater Maintenance">Heater Maintenance</MenuItem>
-              <MenuItem value="Maintenance">Other Maintenance</MenuItem>
-              <MenuItem value="Other">Other</MenuItem>
-
-            </TextField>
-            <TextField
-              name="serviceImage"
-              type="file"
-              onChange={(e) => setServiceImage(e.target.files[0])}
-              label="Service Image"
-              fullWidth
-              margin="normal"
-              InputLabelProps={{
-                shrink: true,
-              }}
-            />
-            <DialogActions sx={{ mt: 2, mb: 2, display: 'flex', justifyContent: 'space-between' }}>
-              <Button color='error' variant='contained' sx={{ width: 100 }} onClick={handleCloseDialog}>Cancel</Button>
-              <Button type="submit" variant="contained" sx={{ width: 100 }} color="primary" disabled={loading}>
-                {loading ? <CircularProgress size={24} /> : selectedService ? "Update" : "Add"}
-              </Button>
-            </DialogActions>
-          </DialogContent>
-
-        </form>
-      </Dialog> */}
-
-
       <Dialog open={openDialog} onClose={handleCloseDialog} fullWidth maxWidth="sm">
         <DialogTitle>{selectedService ? "Edit Service" : "Add New Service"}</DialogTitle>
         <DialogContent dividers>
@@ -474,7 +323,7 @@ const ServiceManagement = () => {
             <TextField
               label="Service Name"
               name="serviceName"
-              value={formFields.serviceName}
+              value={state.formFields.serviceName}
               onChange={handleFieldChange}
               required
             />
@@ -483,16 +332,16 @@ const ServiceManagement = () => {
               name="serviceDescription"
               multiline
               rows={3}
-              value={description}
+              value={state.formFields.serviceDescription}
               onChange={handleFieldChange}
-              helperText={`${description.length}/150 characters`}
+              helperText={`${state.formFields.serviceDescription.length}/150 characters`}
               required
             />
             <FormControl>
               <InputLabel>Service Type</InputLabel>
               <Select
                 name="serviceType"
-                value={formFields.serviceType}
+                value={state.formFields.serviceType}
                 onChange={handleFieldChange}
                 required
                 label="Service Type"
@@ -524,22 +373,15 @@ const ServiceManagement = () => {
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancel</Button>
           <Button onClick={handleFormSubmit} variant="contained" disabled={loading}>
-            {
-              // loading ? <CircularProgress size={24} /> : 
-              (selectedService ? "Update" : "Add")
-            }
+            {loading ? <CircularProgress size={24} /> : (selectedService ? "Update" : "Add")}
           </Button>
         </DialogActions>
       </Dialog>
-
-
-      {/* Delete Confirmation Dialog */}
+７
       <Dialog open={openDelete} onClose={handleDeleteClose} maxWidth="xs" fullWidth>
         <DialogTitle>Delete Service?</DialogTitle>
         <DialogContent>
-          <Typography>
-            Are you sure you want to delete this service?
-          </Typography>
+          <Typography>Are you sure you want to delete this service?</Typography>
           <DialogActions sx={{ justifyContent: 'space-between', mt: 3 }}>
             <Button sx={{ width: 100 }} onClick={handleDeleteClose} variant="contained">Cancel</Button>
             <Button sx={{ width: 100 }} onClick={deleteService} variant="contained" color="error">
@@ -547,16 +389,8 @@ const ServiceManagement = () => {
             </Button>
           </DialogActions>
         </DialogContent>
-
       </Dialog>
-
-      {/* Image Preview Dialog */}
-      <Dialog
-        open={openPreview}
-        onClose={handleClosePreview}
-        maxWidth="md"
-        fullWidth
-      >
+      <Dialog open={openPreview} onClose={handleClosePreview} maxWidth="md" fullWidth>
         <DialogTitle>Service Image Preview</DialogTitle>
         <DialogContent>
           {previewImage && (
@@ -564,11 +398,8 @@ const ServiceManagement = () => {
               <img
                 src={previewImage}
                 alt="Service Preview"
-                style={{
-                  maxWidth: '100%',
-                  maxHeight: '70vh',
-                  objectFit: 'contain'
-                }}
+                style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain' }}
+                loading="lazy"
               />
             </Box>
           )}
@@ -581,4 +412,4 @@ const ServiceManagement = () => {
   );
 };
 
-export default ServiceManagement;
+export default React.memo(ServiceManagement);

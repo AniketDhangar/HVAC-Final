@@ -12,7 +12,9 @@ import {
   CircularProgress,
 } from '@mui/material';
 import axios from 'axios';
-import toast from 'react-hot-toast'; // Added toast for user-friendly error messages
+import toast from 'react-hot-toast';
+
+const REACT_BASE_URL = "http://localhost:3000" 
 
 function EngineerDefaultPage() {
   const [incomingData, setIncomingData] = useState([]);
@@ -21,7 +23,7 @@ function EngineerDefaultPage() {
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/getappoinments');
+        const response = await axios.get(`${REACT_BASE_URL}/getappoinments`);
         console.log('API Response:', response.data); // Debugging log
 
         if (response.data && response.data.appointments) {

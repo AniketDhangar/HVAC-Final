@@ -20,6 +20,10 @@ import SearchIcon from '@mui/icons-material/Search';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import toast, { Toaster } from "react-hot-toast";
+
+
+const REACT_BASE_URL = "http://localhost:3000" 
+
 const UserTable = () => {
     const [appointments, setAppointments] = useState([]);
     const [filteredAppointments, setFilteredAppointments] = useState([]);
@@ -51,7 +55,7 @@ const UserTable = () => {
             try {
                 const token = localStorage.getItem("accessToken"); // Get token if available
 
-                const response = await axios.get("http://localhost:3000/getappoinments", {
+                const response = await axios.get(`${REACT_BASE_URL}/getappoinments`, {
                     headers: {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`,

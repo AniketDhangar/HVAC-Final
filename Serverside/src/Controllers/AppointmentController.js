@@ -52,6 +52,7 @@ const getAppointments = async (req, res) => {
     const appointments = await Appointment.find()
       .populate("assignedEngineer", "name email phone")
       .populate("userId")
+      .populate('serviceId')
       .sort({ appointmentDate: -1 });
 
     res.status(200).json({

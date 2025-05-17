@@ -5,6 +5,8 @@ import axios from 'axios';
 import Loader from '../../../Auth/Loader';
 import { styled } from '@mui/material/styles';
 
+const REACT_BASE_URL = "http://localhost:3000" 
+
 const StyledCard = styled(Card)(({ theme }) => ({
   borderRadius: theme.spacing(1),
   boxShadow: theme.shadows[3],
@@ -90,7 +92,7 @@ function MyAppointments() {
       }
 
       try {
-        const res = await axios.get('http://localhost:3000/myappointments', {
+        const res = await axios.get(`${REACT_BASE_URL}/myappointments`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -98,7 +100,7 @@ function MyAppointments() {
         setAppointments(Array.isArray(res.data.appointments) ? res.data.appointments : []);
         console.log('Response:', res.data.appointments);
       } catch (err) {
-        console.error('Error fetching appointments:', err);
+        console.log('Error fetching appointments:', err);
         setError('Failed to fetch appointments. Please try again later.');
       } finally {
         setLoading(false);

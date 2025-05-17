@@ -66,27 +66,6 @@ const deleteService = async (req, res) => {
   }
 };
 
-
-// const updateService = async (req, res) => {
-//   const { serviceName, serviceDescription, serviceType, serviceImage } =
-//     req.body;
-
-//   try {
-//     const updatedService = await Service.findByIdAndUpdate(
-//       { _id: req.body.id },
-
-//       { serviceName, serviceDescription, serviceType, serviceImage },
-//       { new: true }
-//     );
-//     if (!updatedService) {
-//       return res.status(404).json({ message: "Service not found" });
-//     }
-//     res.status(200).json({ message: "updated successfully", updatedService });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: "Error updating service", error });
-//   }
-// };
 const updateService = async (req, res) => {
   const { serviceName, serviceDescription, serviceType, id } = req.body;
 

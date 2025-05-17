@@ -23,6 +23,8 @@ import { Edit as EditIcon } from '@mui/icons-material';
 import Loader from '../Auth/Loader'
 
 
+const REACT_BASE_URL = "http://localhost:3000" 
+
 const AppointmentDetails = () => {
   const { id } = useParams(); // Get appointment ID from route
   const [appointment, setAppointment] = useState(null);
@@ -52,7 +54,7 @@ const AppointmentDetails = () => {
       console.log('Using token:', token);
       console.log('Engineer ID:', engineerId);
 
-      const response = await axios.get(`http://localhost:3000/engineer/appointment/${id}`, {
+      const response = await axios.get(`${REACT_BASE_URL}/engineer/appointment/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -91,7 +93,7 @@ const AppointmentDetails = () => {
       console.log('Updating status for appointment ID:', id, 'to:', status);
 
       await axios.put(
-        `http://localhost:3000/updateappointment`,
+        `${REACT_BASE_URL}/updateappointment`,
         {
           _id: id,
           appointmentStatus: status,

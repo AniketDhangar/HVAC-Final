@@ -12,13 +12,14 @@ import {
   Search as SearchIcon,
   Sort as SortIcon
 } from "@mui/icons-material";
+const REACT_BASE_URL = "http://localhost:3000" 
 
 const AppointmentTable = () => {
   const [appointments, setAppointments] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [sortField, setSortField] = useState("userName");
+  const [sortField, setSortField] = useState("name");
   const [sortDirection, setSortDirection] = useState("asc");
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -35,6 +36,7 @@ const AppointmentTable = () => {
   const userId = localStorage.getItem("userId");
   const token = localStorage.getItem("accessToken");
 
+
   if (!token) {
     toast.error("No token found. Please log in.");
     return null;
@@ -44,7 +46,7 @@ const AppointmentTable = () => {
     try {
       setAppointmentsLoading(true);
       const { data } = await axios.get(
-        "http://localhost:3000/getappoinments",
+        `${REACT_BASE_URL}/getappoinments`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       console.log("Appointments data:", data.appointments);
@@ -55,7 +57,7 @@ const AppointmentTable = () => {
       setAppointments(list);
       setFiltered(list);
       setAppointmentsLoading(false);
-      console.log("data object",data)
+      console.log("data object", data)
     } catch (error) {
       console.error("Error fetching appointments:", error);
       if (error.response?.status === 401) {
@@ -74,7 +76,7 @@ const AppointmentTable = () => {
       try {
         await fetchAppointments();
         const engineersResponse = await axios.get(
-          "http://localhost:3000/getengineers",
+          `${REACT_BASE_URL}/getengineers`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         console.log("Engineers API response:", engineersResponse.data);
@@ -174,7 +176,7 @@ const AppointmentTable = () => {
     try {
       console.log("Updating status for appointment:", selected._id, "New status:", status);
       const response = await axios.put(
-        "http://localhost:3000/updateappointment",
+        `${REACT_BASE_URL}/updateappointment`,
         {
           _id: selected._id,
           appointmentStatus: status,
@@ -199,7 +201,7 @@ const AppointmentTable = () => {
     if (!selected) return;
 
     try {
-      await axios.delete(`http://localhost:3000/deleteappointment`, {
+      await axios.delete(`${REACT_BASE_URL}/deleteappointment`, {
         data: { _id: selected._id },
         headers: {
           Authorization: `Bearer ${token}`
@@ -229,7 +231,7 @@ const AppointmentTable = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:3000/assign',
+        `${REACT_BASE_URL}/assign`,
         {
           appointmentId: selectedAppointment?._id,
           userId: selectedEngineer
@@ -338,7 +340,7 @@ const AppointmentTable = () => {
                         <TableCell>{app.userId?.mobile}</TableCell>
                         <TableCell>{app.userId?.email}</TableCell>
                         <TableCell>{app.deviceBrand}</TableCell>
-                        <TableCell>{app.serviceId.serviceType}</TableCell>
+                        <TableCell>{app.serviceId?.serviceName}</TableCell>
                         <TableCell>{app.appointmentStatus}</TableCell>
                         <TableCell>
                           {app.assignedEngineer ? (
@@ -390,7 +392,7 @@ const AppointmentTable = () => {
               <Typography><strong>Customer Name:</strong> {selected.userId?.name}</Typography>
               <Typography><strong>Contact:</strong> {selected.userId?.mobile}</Typography>
               <Typography><strong>Email:</strong> {selected.userId?.email}</Typography>
-              <Typography><strong>Service Type:</strong> {selected.serviceId.serviceType|| "NA"}</Typography>
+              <Typography><strong>Service Type:</strong> {selected.serviceId?.serviceType || "NA"}</Typography>
               <Typography><strong>Device Brand:</strong> {selected.deviceBrand}</Typography>
               <Typography><strong>Problem Description:</strong> {selected.problemDescription}</Typography>
             </Box>

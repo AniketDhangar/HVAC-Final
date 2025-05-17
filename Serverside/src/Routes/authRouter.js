@@ -4,7 +4,7 @@ import {
   deleteAppointment,
   getAppointments,
   updateAppointment,
-  getMyAppointments
+  getMyAppointments,
 } from "../Controllers/AppointmentController.js";
 import { authenticateToken, authorizeRoles } from "../middleware/Auth.js";
 import { uploader } from "../middleware/multerUploads.js";
@@ -40,7 +40,7 @@ import {
   assignWorkToEngineer,
   getAppointmentsForEngineer,
   getAppointmentByIdForEngineer,
-  getEngineerTasks
+  getEngineerTasks,
 } from "../Controllers/TaskController.js";
 
 const router = express.Router();
@@ -52,11 +52,16 @@ router.post(
   createAppointment
 );
 router.get("/getappoinments", getAppointments);
-router.get("/myappointments",authenticateToken,getMyAppointments)
+router.get(
+  "/myappointments",
+  authenticateToken,
+  authorizeRoles(["user","admin"]),
+  getMyAppointments
+);
 router.put(
   "/updateappointment",
   authenticateToken,
-  authorizeRoles(["admin","engineer"]),
+  authorizeRoles(["admin", "engineer"]),
   updateAppointment
 );
 router.delete(
@@ -67,11 +72,33 @@ router.delete(
 );
 
 // Services routes
-router.post("/addservice", uploader.single("serviceImage"), addService);
-router.get("/servicesforadmin", getServices);
+router.post(
+  "/addservice",
+  authenticateToken,
+  authorizeRoles("admin"),
+  uploader.single("serviceImage"),
+  addService
+);
+router.get(
+  "/servicesforadmin",
+  authenticateToken,
+  authorizeRoles("admin"),
+  getServices
+);
 router.get("/services", getServices);
-router.delete("/deleteservice", deleteService);
-router.put("/updateservice",uploader.single("serviceImage"), updateService);
+router.delete(
+  "/deleteservice",
+  authenticateToken,
+  authorizeRoles("admin"),
+  deleteService
+);
+router.put(
+  "/updateservice",
+  authenticateToken,
+  authorizeRoles("admin"),
+  uploader.single("serviceImage"),
+  updateService
+);
 
 // Blogs
 router.post(
@@ -81,8 +108,13 @@ router.post(
   uploader.single("blogImage"),
   createBlog
 );
-router.get("/blogs", allBlogs);
-router.get("/blogsforadmin", allBlogs);
+router.get("/blogs",  allBlogs);
+router.get(
+  "/blogsforadmin",
+  authenticateToken,
+  authorizeRoles("admin"),
+  allBlogs
+);
 router.put(
   "/updateblog",
   authenticateToken,
@@ -90,13 +122,23 @@ router.put(
   uploader.single("blogImage"),
   updateBlog
 );
-router.delete("/deleteblog", deleteBlog);
+router.delete(
+  "/deleteblog",
+  authenticateToken,
+  authorizeRoles("admin"),
+  deleteBlog
+);
 
 // Client User Routes
 router.post("/register", registerUser);
 router.get("/users", getUsers);
 router.put("/users", updateUser);
-router.delete("/deleteuser", deleteUser);
+router.delete(
+  "/deleteuser",
+  authenticateToken,
+  authorizeRoles("admin"),
+  deleteUser
+);
 router.get(
   "/getengineers",
   authenticateToken,
@@ -105,12 +147,27 @@ router.get(
 );
 
 // Dashboard
-router.get("/dashboard", authenticateToken, DashboardCollection);
+router.get(
+  "/dashboard",
+  authenticateToken,
+  authorizeRoles("admin"),
+  DashboardCollection
+);
 
 // Contacts
 router.post("/addcontacts", createContact);
-router.get("/getcontacts", getContacts);
-router.delete("/deletecontact", deleteContact);
+router.get(
+  "/getcontacts",
+  authenticateToken,
+  authorizeRoles("admin"),
+  getContacts
+);
+router.delete(
+  "/deletecontact",
+  authenticateToken,
+  authorizeRoles("admin"),
+  deleteContact
+);
 router.put("/updatecontact", updateContact);
 
 // Auth routes

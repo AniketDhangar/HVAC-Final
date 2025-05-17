@@ -16,6 +16,10 @@ import {
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import toast, { Toaster } from "react-hot-toast";
+
+
+const REACT_BASE_URL = "http://localhost:3000" 
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -40,14 +44,15 @@ const SignUp = () => {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     try {
-      const result = await axios.post("http://localhost:3000/register", formData, {
+      const result = await axios.post(`${REACT_BASE_URL}/register`, formData, {
         headers: { "Content-Type": "application/json" },
       });
       if (result.data.exists) {
         alert("User already registered. Please log in.");
         navigate('/login');
       } else {
-        alert("You are registered successfully!");
+        toast.success('You are registered successfully!')
+      
         console.log(result.data);
         navigate('/login');
       }
@@ -68,6 +73,7 @@ const SignUp = () => {
         px: { xs: 2, sm: 3 },
       }}
     >
+      <Toaster position="top-right"/>
       <Fade in timeout={500}>
         <Card
           sx={{

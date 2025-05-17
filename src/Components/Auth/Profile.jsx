@@ -24,6 +24,8 @@ import EditSharpIcon from '@mui/icons-material/EditSharp';
 import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
 
+const REACT_BASE_URL = "http://localhost:3000" 
+
 const Profile = () => {
   const theme = useTheme();
   const dispatch = useDispatch();
@@ -127,7 +129,7 @@ const Profile = () => {
 
     setIsUpdating(true);
     try {
-      const response = await axios.put('http://localhost:3000/users', reqBody, {
+      const response = await axios.put(`${REACT_BASE_URL}/users`, reqBody, {
         headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
       });
       console.log('Backend response:', response.data); // Debug log

@@ -34,6 +34,11 @@ import toast, { Toaster } from "react-hot-toast";
 import { Edit as EditIcon } from '@mui/icons-material';
 import Loader from '../Auth/Loader';
 
+
+
+const REACT_BASE_URL = "http://localhost:3000" 
+
+
 const EngineerDashboard = () => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -87,7 +92,7 @@ const EngineerDashboard = () => {
         return;
       }
 
-      const response = await axios.get(`http://localhost:3000/engineer/appointments/${engineerId}`, {
+      const response = await axios.get(`${REACT_BASE_URL}/engineer/appointments/${engineerId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -132,7 +137,7 @@ const EngineerDashboard = () => {
       const userId = localStorage.getItem('userId');
 
       await axios.put(
-        `http://localhost:3000/updateappointment`,
+        `${REACT_BASE_URL}/updateappointment`,
         {
           _id: selected._id,
           appointmentStatus: status,

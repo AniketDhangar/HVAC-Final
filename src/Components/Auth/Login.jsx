@@ -18,6 +18,8 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setUser } from '../Reduxwork/userslice';
 
+const REACT_BASE_URL = "http://localhost:3000" 
+
 const LoginForm = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [authStatus, setAuthStatus] = useState({ loading: false, errorMsg: '' });
@@ -64,7 +66,7 @@ const LoginForm = () => {
     setAuthStatus({ loading: true, errorMsg: '' });
 
     try {
-      const { data } = await axios.post('http://localhost:3000/login', formData);
+      const { data } = await axios.post(`${REACT_BASE_URL}/login`, formData);
 
       if (!data.success) {
         throw new Error(data.message || 'Login failed');

@@ -16,6 +16,8 @@ import {
 } from '@mui/material';
 import toast, { Toaster } from "react-hot-toast";
 
+const REACT_BASE_URL = "http://localhost:3000"
+
 const AppointmentForm = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -32,7 +34,7 @@ const AppointmentForm = () => {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const res = await axios.get("http://localhost:3000/services");
+        const res = await axios.get(`${REACT_BASE_URL}/services`);
         console.log("all services", res.data.allServices);
         setServices(res.data.allServices || []);
       } catch (err) {
@@ -61,7 +63,7 @@ const AppointmentForm = () => {
     }
 
     try {
-      await axios.post("http://localhost:3000/takeappoinment", formData, {
+      await axios.post(`${REACT_BASE_URL}/takeappoinment`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

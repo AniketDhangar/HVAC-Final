@@ -25,6 +25,9 @@ import SortIcon from '@mui/icons-material/Sort';
 import SettingsIcon from '@mui/icons-material/Settings';
 import toast, { Toaster } from 'react-hot-toast';
 
+const REACT_BASE_URL = "http://localhost:3000" 
+
+
 const ContactIssues = () => {
     const [contacts, setContacts] = useState([]);
     const [filteredContacts, setFilteredContacts] = useState([]);
@@ -45,7 +48,7 @@ const ContactIssues = () => {
                     return;
                 }
 
-                const response = await axios.get("http://localhost:3000/getcontacts", {
+                const response = await axios.get(`${REACT_BASE_URL}/getcontacts`    , {
                     headers: {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`,
@@ -56,7 +59,7 @@ const ContactIssues = () => {
                 const contactList = response.data.contacts || [];
                 setContacts(contactList);
                 setFilteredContacts(contactList);
-                toast.success("Fetched contacts successfully!");
+                toast.success("Fetched requests successfully!");
             } catch (error) {
                 console.error("Error fetching contacts:", error);
                 if (error.response?.status === 401) {
@@ -64,7 +67,7 @@ const ContactIssues = () => {
                     localStorage.removeItem("accessToken");
                     window.location.href = "/login";
                 } else {
-                    toast.error("Error fetching contacts!");
+                    toast.error("Error fetching requests!");
                 }
                 setContacts([]);
                 setFilteredContacts([]);
@@ -129,7 +132,7 @@ const ContactIssues = () => {
 
         try {
             const token = localStorage.getItem("accessToken");
-            await axios.delete("http://localhost:3000/deletecontact", {
+            await axios.delete(`${REACT_BASE_URL}/deletecontact`, {
                 data: { _id: selectedContact._id },
                 headers: {
                     "Content-Type": "application/json",
@@ -139,11 +142,11 @@ const ContactIssues = () => {
 
             setContacts(prev => prev.filter(contact => contact._id !== selectedContact._id));
             setFilteredContacts(prev => prev.filter(contact => contact._id !== selectedContact._id));
-            toast.success("Contact deleted successfully!");
+            toast.success("Requests deleted successfully!");
             closeActionDialog();
         } catch (error) {
-            console.error("Error deleting contact:", error);
-            toast.error("Failed to delete contact!");
+            console.log("Error deleting requests:", error);
+            toast.error("Failed to delete requests!");
         }
     };
 

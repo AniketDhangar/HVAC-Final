@@ -6,7 +6,6 @@ import About from '../Components/User/Components/Pages/About';
 import Contact from '../Components/User/Components/Pages/Contact';
 import Blog from '../Components/User/Components/Pages/Blog';
 import Services from '../Components/User/Components/Pages/Services';
-import Cart from '../Components/User/Components/Pages/Cart';
 import AppointmentForm from '../Components/User/Components/Pages/AppointmentForm';
 import Profile from '../Components/Auth/Profile';
 import ProtectedRoute from './ProtectedRoute';
@@ -28,14 +27,7 @@ const UserRoutes = () => {
         <Route path="services" element={<Services />} />
 
         {/* Protected Routes - Only accessible to logged-in users */}
-        <Route
-          path="cart"
-          element={
-            <ProtectedRoute allowedRoles={['user']}>
-              <Cart />
-            </ProtectedRoute>
-          }
-        />
+    
         <Route
           path="take-appointment"
           element={
