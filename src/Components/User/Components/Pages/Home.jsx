@@ -2,18 +2,14 @@ import React from 'react';
 import { Box, Typography, Container, Button, Stack } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import { use } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import { Helmet } from 'react-helmet-async';
 import FloatingApp from './FloatingApp';
 import About from './About';
 import Services from './Services';
 import Blog from './Blog';
 import Contact from './Contact';
 
-
-
-// Background image URL
 const backgroundImage = "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80";
 
 const StyledButton = styled(Button)(({ theme }) => ({
@@ -27,19 +23,106 @@ const StyledButton = styled(Button)(({ theme }) => ({
   textTransform: 'none',
 }));
 
+
 const BrandLogo = styled('img')({
   height: '40px',
   margin: '0 20px',
   objectFit: 'contain',
-  filter: 'brightness(0) invert(1)', // Makes logos white
+  filter: 'brightness(0) invert(1)',
 });
-
 
 const Home = () => {
   const navigate = useNavigate();
 
+  // Structured data for LocalBusiness and WebPage
+  const homeStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Freshair Technical Systems LLC - HVAC Services",
+    "description": "Freshair Technical Systems LLC, your trusted HVAC contractor in Dubai, Abu Dhabi, Sharjah, and Al Ain, offering turnkey HVAC solutions, maintenance, and tailored services.",
+    "url": "https://hvacexperts.com",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Freshair Technical Systems LLC",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://hvacexperts.com/assets/logo.png"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "(555) 123-4567",
+        "contactType": "Customer Service",
+        "email": "service@hvacexperts.com",
+        "areaServed": ["Dubai", "Abu Dhabi", "Sharjah", "Al Ain"]
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "123 Cooling Street",
+        "addressLocality": "AC City",
+        "addressRegion": "State",
+        "postalCode": "12345"
+      },
+      "sameAs": [
+        "https://www.facebook.com/freshairtechnical",
+        "https://www.twitter.com/freshairtechnical",
+        "https://www.linkedin.com/company/freshairtechnical"
+      ]
+    },
+    "mainEntity": {
+      "@type": "LocalBusiness",
+      "name": "Freshair Technical Systems LLC",
+      "url": "https://hvacexperts.com",
+      "telephone": "(555) 123-4567",
+      "email": "service@hvacexperts.com",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "123 Cooling Street",
+        "addressLocality": "AC City",
+        "addressRegion": "State",
+        "postalCode": "12345"
+      },
+      "areaServed": ["Dubai", "Abu Dhabi", "Sharjah", "Al Ain"]
+    }
+  };
+
   return (
     <>
+      {/* SEO Metadata */}
+      <Helmet>
+        
+        <title>Freshair Technical Systems LLC - Trusted HVAC Contractor</title>
+        <meta
+          name="description"
+          content="Freshair Technical Systems LLC, your trusted HVAC contractor in Dubai, Abu Dhabi, Sharjah, and Al Ain. Over 30 years of excellence in HVAC solutions and maintenance."
+        />
+        <meta
+          name="keywords"
+          content="HVAC contractor, AC repair Dubai, HVAC services Abu Dhabi, AC maintenance Sharjah, HVAC solutions Al Ain, Freshair Technical Systems"
+        />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:title" content="Freshair Technical Systems LLC - Trusted HVAC Contractor" />
+        <meta
+          property="og:description"
+          content="Freshair Technical Systems LLC, your trusted HVAC contractor in Dubai, Abu Dhabi, Sharjah, and Al Ain. Over 30 years of excellence in HVAC solutions and maintenance."
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://hvacexperts.com" />
+        <meta property="og:image" content="https://hvacexperts.com/assets/hvac-home-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+              <meta name="twitter:title" content=" HVAC Experts - Trusted AC Repair Since 2005" />
+         <meta name="twitter:title" content="Contact HVAC Experts - Get in Touch for AC Services" />
+        {/* <meta name="twitter:title" content="Freshair Technical Systems LLC - Trusted HVAC Contractor" /> */}
+        <meta
+          name="twitter:description"
+          content="Freshair Technical Systems LLC, your trusted HVAC contractor in Dubai, Abu Dhabi, Sharjah, and Al Ain. Over 30 years of excellence in HVAC solutions and maintenance."
+        />
+        <meta name="twitter:image" content="https://hvacexperts.com/assets/hvac-home-image.jpg" />
+        <link rel="canonical" href="https://hvacexperts.com" />
+        <script type="application/ld+json">
+          {JSON.stringify(homeStructuredData)}
+        </script>
+      </Helmet>
+
       <Box
         sx={{
           minHeight: '100vh',
@@ -51,13 +134,12 @@ const Home = () => {
           justifyContent: 'center',
           position: 'relative',
           color: 'white',
-          // p: 8,
           m: 0,
         }}
+        aria-label="Home hero section"
       >
         <FloatingApp />
         <Container maxWidth="lg">
-          {/* Blue accent element */}
           <Box
             sx={{
               width: '100px',
@@ -66,8 +148,6 @@ const Home = () => {
               mb: 2,
             }}
           />
-
-          {/* Decades text */}
           <Typography
             variant="subtitle1"
             sx={{
@@ -78,8 +158,6 @@ const Home = () => {
           >
             DECADES OF EXPERTISE YOU CAN TRUST
           </Typography>
-
-          {/* Main heading */}
           <Typography
             variant="h1"
             sx={{
@@ -91,8 +169,6 @@ const Home = () => {
           >
             Your Trusted HVAC Partner in Excellence
           </Typography>
-
-          {/* Description */}
           <Typography
             variant="h6"
             sx={{
@@ -105,28 +181,23 @@ const Home = () => {
             Freshair Technical Systems LLC, your preferred HVAC contractor in Dubai, Abu Dhabi, Sharjah, and Al Ain.
             With over three decades of excellence, we offer turnkey HVAC solutions, maintenance, and tailored services.
           </Typography>
-
-          {/* CTA Button */}
           <StyledButton
             variant="contained"
             endIcon={<ArrowForwardIcon />}
             sx={{ mb: 8 }}
             onClick={() => navigate('/user/services')}
+            aria-label="View HVAC services"
           >
             VIEW SERVICES
           </StyledButton>
-
         </Container>
-
       </Box>
 
-      {/* all files are called here in hero section */}
       <About />
       <Services />
       <Blog />
       <Contact />
     </>
-
   );
 };
 

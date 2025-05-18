@@ -8,6 +8,7 @@ import router from "./src/Routes/authRouter.js";
 import { authenticateToken } from "./src/middleware/Auth.js";
 import path from "path";
 import { fileURLToPath } from "url";
+import helmet from 'helmet'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,6 +20,7 @@ dotenv.config();
 
 // Connect to database
 connectDB();
+app.use(helmet())
 
 // Middleware
 app.use(cors({
@@ -35,26 +37,10 @@ app.use(cookieParser());
 app.use('/uploads', express.static(path.join(__dirname, 'Uploads')));
 
 
+
 // Routes
 app.use(router);
 
-// Error handling middleware
-// app.use((err, req, res, next) => {
-//   console.error(err.stack);
-//   res.status(500).json({
-//     success: false,
-//     message: 'Internal Server Error',
-//     error: process.env.NODE_ENV === 'development' ? err.message : undefined
-//   });
-// });
-
-// 404 handler
-// app.use((req, res) => {
-//   res.status(404).json({
-//     success: false,
-//     message: 'Route not found'
-//   });
-// });
 
 // User profile route
 router.get("/me", authenticateToken, async (req, res) => {

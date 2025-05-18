@@ -34,8 +34,9 @@ import TimelapseIcon from '@mui/icons-material/Timelapse';
 import { styled } from '@mui/material/styles';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async'; // Added for SEO
 
-const REACT_BASE_URL = "http://localhost:3000" 
+const REACT_BASE_URL = "http://localhost:3000"
 
 const StyledCard = styled(Card)(({ theme }) => ({
   height: '100%',
@@ -68,15 +69,11 @@ const Services = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-
-
-
-
   useEffect(() => {
     const fetchServices = async () => {
       try {
         const response = await axios.get(`${REACT_BASE_URL}/services`);
-        console.log("Services data:", response.data.allServices); // Debug: Log service data
+        console.log("Services data:", response.data.allServices);
         setServices(response.data.allServices || []);
         setLoading(false);
       } catch (err) {
@@ -147,11 +144,82 @@ const Services = () => {
 
   const displayedServices = showAllServices ? filteredServices : filteredServices.slice(0, 3);
 
-  const fallbackImage = 'https://via.placeholder.com/200x200?text=No+Image'; // Fallback image
+  const fallbackImage = 'https://via.placeholder.com/200x200?text=No+Image';
+
+  // Structured data for Service and WebPage
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "HVAC Services - Freshair Technical Systems LLC",
+    "description": "Explore professional HVAC services including AC repair, maintenance, installation, and emergency services in Dubai, Abu Dhabi, Sharjah, and Al Ain.",
+    "url": "https://hvacexperts.com/services",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Freshair Technical Systems LLC",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://hvacexperts.com/assets/logo.png"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "(555) 123-4567",
+        "contactType": "Customer Service",
+        "email": "service@hvacexperts.com",
+        "areaServed": ["Dubai", "Abu Dhabi", "Sharjah", "Al Ain"]
+      }
+    },
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "HVAC Services",
+      "itemListElement": services.map(service => ({
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": service.serviceName,
+          "description": service.serviceDescription,
+          "serviceType": service.serviceType,
+          "url": `https://hvacexperts.com/services#${service._id}`
+        }
+      }))
+    }
+  };
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ py: 8 }}>
+      {/* SEO Metadata */}
+      <Helmet>
+        <title>HVAC Services - Freshair Technical Systems LLC</title>
+        <meta
+          name="description"
+          content="Explore professional HVAC services including AC repair, maintenance, installation, and emergency services in Dubai, Abu Dhabi, Sharjah, and Al Ain."
+        />
+        <meta
+          name="keywords"
+          content="HVAC services, AC repair Dubai, AC maintenance Abu Dhabi, AC installation Sharjah, emergency HVAC Al Ain, Freshair Technical Systems"
+        />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:title" content="HVAC Services - Freshair Technical Systems LLC" />
+        <meta
+          property="og:description"
+          content="Explore professional HVAC services including AC repair, maintenance, installation, and emergency services in Dubai, Abu Dhabi, Sharjah, and Al Ain."
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://hvacexperts.com/services" />
+        <meta property="og:image" content="https://hvacexperts.com/assets/hvac-services-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="HVAC Services - Freshair Technical Systems LLC" />
+        <meta
+          name="twitter:description"
+          content="Explore professional HVAC services including AC repair, maintenance, installation, and emergency services in Dubai, Abu Dhabi, Sharjah, and Al Ain."
+        />
+        <meta name="twitter:image" content="https://hvacexperts.com/assets/hvac-services-image.jpg" />
+        <link rel="canonical" href="https://hvacexperts.com/services" />
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
+      </Helmet>
+
+      <Box sx={{ py: 8 }} aria-label="HVAC Services page">
         <Typography
           variant="h2"
           component="h1" 
@@ -192,7 +260,7 @@ const Services = () => {
                       color: theme.palette.primary.main
                     }}
                   >
-                    <IconComponent sx={{ fontSize: 40 }} />
+                    <IconComponent sx={{ fontSize: 40 }} aria-hidden="true" />
                   </Box>
                   <CardContent>
                     <Typography
@@ -231,7 +299,7 @@ const Services = () => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon color="primary" />
+                  <SearchIcon color="primary" aria-hidden="true" />
                 </InputAdornment>
               ),
               sx: {
@@ -242,11 +310,12 @@ const Services = () => {
                 }
               }
             }}
+            aria-label="Search HVAC services"
           />
         </Box>
 
         {/* Service Type Chips */}
-        <Box sx={{ mb: 4, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+        <Box sx={{ mb: 4, display: 'flex', flexWrap: 'wrap', gap: 1 }} role="group" aria-label="Filter services by type">
           <Chip
             label="All Services"
             onClick={() => setSelectedTypes([])}
@@ -263,6 +332,7 @@ const Services = () => {
                   theme.palette.action.hover,
               }
             }}
+            aria-label="Show all services"
           />
           {categories.map((type) => (
             <Chip
@@ -282,6 +352,7 @@ const Services = () => {
                     theme.palette.action.hover,
                 }
               }}
+              aria-label={`Filter by ${type} services`}
             />
           ))}
         </Box>
@@ -291,13 +362,13 @@ const Services = () => {
           {loading ? (
             <Grid item xs={12}>
               <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                <CircularProgress />
+                <CircularProgress aria-label="Loading services" />
               </Box>
             </Grid>
           ) : error ? (
             <Grid item xs={12}>
               <Box sx={{ textAlign: 'center', py: 4, color: 'error.main' }}>
-                <Typography>Error loading services. Please try again later.</Typography>
+                <Typography aria-live="polite">Error loading services. Please try again later.</Typography>
               </Box>
             </Grid>
           ) : (
@@ -309,7 +380,7 @@ const Services = () => {
                       component="img"
                       height="200"
                       image={service.serviceImage || fallbackImage}
-                      alt={service.serviceName || 'Service Image'}
+                      alt={service.serviceName || 'HVAC Service Image'}
                       onError={() => console.error("Failed to load service image:", service.serviceImage)}
                       sx={{
                         objectFit: 'cover',
@@ -331,6 +402,7 @@ const Services = () => {
                             py: 0.5,
                             fontSize: '0.8rem',
                           }}
+                          aria-label={`Service type: ${service.serviceType}`}
                         />
                       </Box>
                       <Typography
@@ -371,6 +443,7 @@ const Services = () => {
                             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                           }
                         }}
+                        aria-label={`Book ${service.serviceName} service`}
                       >
                         Book Now
                       </Button>
@@ -406,6 +479,7 @@ const Services = () => {
                   color: theme.palette.primary.dark,
                 }
               }}
+              aria-label={showAllServices ? 'Show fewer services' : 'Show more services'}
             >
               {showAllServices ? 'Show Less' : 'Show More Services'}
             </Button>
@@ -421,7 +495,7 @@ const Services = () => {
             borderRadius: 2,
             boxShadow: theme.shadows[1],
           }}>
-            <Typography variant="h6" color="text.secondary">
+            <Typography variant="h6" color="text.secondary" aria-live="polite">
               No services found matching your search criteria
             </Typography>
           </Box>
@@ -433,6 +507,8 @@ const Services = () => {
           onClose={handleCloseDialog}
           maxWidth="md"
           fullWidth
+          aria-labelledby="service-dialog-title"
+          aria-describedby="service-dialog-description"
         >
           <DialogTitle sx={{ 
             display: 'flex', 
@@ -440,7 +516,7 @@ const Services = () => {
             alignItems: 'center',
             pb: 2,
           }}>
-            <Typography variant="h5" component="div" sx={{ fontWeight: 'bold' }}>
+            <Typography variant="h5" component="div" sx={{ fontWeight: 'bold' }} id="service-dialog-title">
               {selectedService?.serviceName}
             </Typography>
             <IconButton
@@ -451,15 +527,16 @@ const Services = () => {
                   color: theme.palette.grey[700],
                 }
               }}
+              aria-label="Close service details dialog"
             >
               <CloseIcon />
             </IconButton>
           </DialogTitle>
-          <DialogContent dividers>
+          <DialogContent dividers id="service-dialog-description">
             <Box sx={{ mb: 3 }}>
               <img
                 src={selectedService?.serviceImage || fallbackImage}
-                alt={selectedService?.serviceName || 'Service Image'}
+                alt={selectedService?.serviceName || 'HVAC Service Image'}
                 style={{
                   width: '100%',
                   height: '300px',
@@ -480,6 +557,7 @@ const Services = () => {
                   fontSize: '0.9rem',
                   mb: 2,
                 }}
+                aria-label={`Service type: ${selectedService?.serviceType}`}
               />
               <Typography variant="body1" sx={{ lineHeight: 1.8, mb: 2 }}>
                 {selectedService?.serviceDescription}
@@ -489,9 +567,9 @@ const Services = () => {
                 alignItems: 'center', 
                 color: theme.palette.text.secondary,
               }}>
-                <LocationOn sx={{ mr: 1 }} />
+                <LocationOn sx={{ mr: 1 }} aria-hidden="true" />
                 <Typography variant="body2">
-                  Service Area: Any
+                  Service Area: Dubai, Abu Dhabi, Sharjah, Al Ain
                 </Typography>
               </Box>
             </Box>
@@ -507,6 +585,7 @@ const Services = () => {
                 textTransform: 'none',
                 fontWeight: 500,
               }}
+              aria-label="Cancel service booking"
             >
               Cancel
             </Button>
@@ -520,6 +599,7 @@ const Services = () => {
                 fontWeight: 500,
               }}
               onClick={() => navigate('/user/take-appointment')}
+              aria-label={`Book ${selectedService?.serviceName} service now`}
             >
               Book Now
             </Button>

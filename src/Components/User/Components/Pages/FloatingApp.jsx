@@ -28,9 +28,9 @@ const FloatingApp = () => {
       variant="extended"
       color="primary"
       onClick={handleAppointmentClick}
-      aria-label="Take Appointment"
+      aria-label="Book an AC service appointment"
     >
-      <EventIcon sx={{ mr: 1 }} />
+      <EventIcon sx={{ mr: 1 }} aria-hidden="true" />
       <Typography variant="button">
         Take Appointment
       </Typography>

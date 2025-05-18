@@ -1,4 +1,3 @@
-
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { extendTheme, useTheme } from '@mui/material/styles';
 import { Button, Box, Typography, IconButton, Tooltip } from '@mui/material';
@@ -21,14 +20,15 @@ import React, { Suspense, useEffect, useState } from 'react';
 import Loader from '../../../Auth/Loader';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectUser, logout } from '../../../../Components/Reduxwork/userslice';
-import {  useDemoRouter } from '@toolpad/core/internal';
+import { useDemoRouter } from '@toolpad/core/internal';
+import { Helmet } from 'react-helmet-async'; // Using react-helmet-async for better async support
+
 export default function DashboardLayoutBasic({ window }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const user = useSelector(selectUser);
   const theme = useTheme();
   const [colorScheme, setColorScheme] = useState('light');
-
 
   const router = useDemoRouter('/home');
 
@@ -116,7 +116,7 @@ export default function DashboardLayoutBasic({ window }) {
 
   return (
     <AppProvider
-    linkComponent={Link}
+      linkComponent={Link}
       navigation={NAVIGATION}
       theme={demoTheme}
       branding={{
@@ -125,6 +125,22 @@ export default function DashboardLayoutBasic({ window }) {
       }}
       window={window}
     >
+      <Helmet>
+        <title>HVAC Admin Dashboard</title>
+        <meta name="description" content="Admin panel for managing HVAC services, appointments, clients, blogs, engineers, and contacts." />
+        <meta name="keywords" content="HVAC, admin dashboard, services, appointments, clients, blogs, engineers" />
+        <meta name="robots" content="noindex, nofollow" /> {/* Restrict indexing for admin panel */}
+        <meta property="og:title" content="HVAC Admin Dashboard" />
+        <meta property="og:description" content="Admin panel for managing HVAC services, appointments, clients, blogs, engineers, and contacts." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://your-site.com/main/dashboard" />
+        <meta property="og:image" content="https://your-site.com/assets/hvac-admin-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="HVAC Admin Dashboard" />
+        <meta name="twitter:description" content="Admin panel for managing HVAC services, appointments, clients, blogs, engineers, and contacts." />
+        <meta name="twitter:image" content="https://your-site.com/assets/hvac-admin-image.jpg" />
+        <link rel="canonical" href="https://your-site.com/main/dashboard" />
+      </Helmet>
       <DashboardLayout
         slots={{
           toolbarActions: () => (
@@ -197,7 +213,7 @@ export default function DashboardLayoutBasic({ window }) {
         }}
       >
         <Suspense fallback={<Loader />}>
-        <Outlet />
+          <Outlet />
         </Suspense>
       </DashboardLayout>
     </AppProvider>

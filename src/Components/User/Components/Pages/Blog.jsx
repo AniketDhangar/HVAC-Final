@@ -24,6 +24,7 @@ import { Search as SearchIcon, Close as CloseIcon } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
+import { Helmet } from 'react-helmet-async'; // Added for SEO
 
 const REACT_BASE_URL = "http://localhost:3000"
 
@@ -104,8 +105,69 @@ const Blog = () => {
 
   const fallbackImage = 'https://via.placeholder.com/240x240?text=No+Image'; // Fallback image
 
+  // Structured data for blog posts
+  const blogStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "name": "HVAC Experts AC Repair Blog",
+    "description": "Expert tips and insights for AC maintenance and repair from HVAC Experts.",
+    "url": "https://hvacexperts.com/blog",
+    "blogPost": blogs.map(blog => ({
+      "@type": "BlogPosting",
+      "headline": blog.blogName || "Untitled Blog",
+      "description": getTruncatedDescription(blog.blogDescription) || "No description available",
+      "image": blog.blogImage || fallbackImage,
+      "datePublished": blog.uploadedDate || new Date().toISOString(),
+      "author": {
+        "@type": "Organization",
+        "name": "HVAC Experts"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "HVAC Experts",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://hvacexperts.com/assets/logo.jpg"
+        }
+      }
+    }))
+  };
+
   return (
     <Container maxWidth="lg">
+      {/* SEO Metadata */}
+      <Helmet>
+        <title>AC Repair Blog - HVAC Experts</title>
+        <meta
+          name="description"
+          content="Explore expert tips and insights on AC repair and maintenance from HVAC Experts. Learn how to keep your air conditioning system running smoothly with our blog."
+        />
+        <meta
+          name="keywords"
+          content="AC repair blog, HVAC blog, air conditioning tips, AC maintenance, HVAC Experts, AC troubleshooting"
+        />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:title" content="AC Repair Blog - HVAC Experts" />
+        <meta
+          property="og:description"
+          content="Explore expert tips and insights on AC repair and maintenance from HVAC Experts. Learn how to keep your air conditioning system running smoothly with our blog."
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://hvacexperts.com/blog" />
+        <meta property="og:image" content="https://hvacexperts.com/assets/hvac-blog-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="AC Repair Blog - HVAC Experts" />
+        <meta
+          name="twitter:description"
+          content="Explore expert tips and insights on AC repair and maintenance from HVAC Experts. Learn how to keep your air conditioning system running smoothly with our blog."
+        />
+        <meta name="twitter:image" content="https://hvacexperts.com/assets/hvac-blog-image.jpg" />
+        <link rel="canonical" href="https://hvacexperts.com/blog" />
+        <script type="application/ld+json">
+          {JSON.stringify(blogStructuredData)}
+        </script>
+      </Helmet>
+
       <Toaster position="top-right" />
       <Box sx={{ py: 8 }}>
         <Box sx={{ mb: 6, textAlign: 'center' }}>
@@ -410,7 +472,7 @@ const Blog = () => {
             <Button
               onClick={handleCloseDialog}
               variant="contained"
-              sx={{
+ rodzic: sx={{
                 borderRadius: '25px',
                 px: 4,
                 py: 1,

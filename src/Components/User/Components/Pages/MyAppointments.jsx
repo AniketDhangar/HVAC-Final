@@ -4,8 +4,9 @@ import { useSelector } from 'react-redux';
 import axios from 'axios';
 import Loader from '../../../Auth/Loader';
 import { styled } from '@mui/material/styles';
+import { Helmet } from 'react-helmet-async'; // Added for SEO
 
-const REACT_BASE_URL = "http://localhost:3000" 
+const REACT_BASE_URL = "http://localhost:3000"
 
 const StyledCard = styled(Card)(({ theme }) => ({
   borderRadius: theme.spacing(1),
@@ -125,42 +126,74 @@ function MyAppointments() {
     setSelectedEngineer(null);
   };
 
+  // Structured data for WebPage
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "My HVAC Appointments - Freshair Technical Systems LLC",
+    "description": "View and manage your AC service appointments with Freshair Technical Systems LLC. Check appointment status, engineer details, and more.",
+    "url": "https://hvacexperts.com/user/my-appointments",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Freshair Technical Systems LLC",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://hvacexperts.com/assets/logo.png"
+      }
+    }
+  };
+
   if (loading) {
     return <Loader />;
   }
 
-  if (error) {
-    return (
-      <Box sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, color: 'text.primary' }}>
-          My Appointments
-        </Typography>
-        <Typography variant="body1" color="error.main">
-          {error}
-        </Typography>
-      </Box>
-    );
-  }
-
-  if (!user?.userData) {
-    return (
-      <Box sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, color: 'text.primary' }}>
-          My Appointments
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Please log in to view your appointments.
-        </Typography>
-      </Box>
-    );
-  }
-
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>
+    <Box sx={{ maxWidth: 800, mx: 'auto', p: 3 }} aria-label="My Appointments page">
+      {/* SEO Metadata */}
+      <Helmet>
+        <title>My HVAC Appointments - Freshair Technical Systems LLC</title>
+        <meta
+          name="description"
+          content="View and manage your AC service appointments with Freshair Technical Systems LLC. Check appointment status, engineer details, and more."
+        />
+        <meta
+          name="keywords"
+          content="my HVAC appointments, AC service status, Freshair Technical Systems, appointment management, HVAC Dubai"
+        />
+        <meta name="robots" content="noindex, nofollow" /> {/* Restricted due to user-specific content */}
+        <meta property="og:title" content="My HVAC Appointments - Freshair Technical Systems LLC" />
+        <meta
+          property="og:description"
+          content="View and manage your AC service appointments with Freshair Technical Systems LLC. Check appointment status, engineer details, and more."
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://hvacexperts.com/user/my-appointments" />
+        <meta property="og:image" content="https://hvacexperts.com/assets/hvac-appointments-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="My HVAC Appointments - Freshair Technical Systems LLC" />
+        <meta
+          name="twitter:description"
+          content="View and manage your AC service appointments with Freshair Technical Systems LLC. Check appointment status, engineer details, and more."
+        />
+        <meta name="twitter:image" content="https://hvacexperts.com/assets/hvac-appointments-image.jpg" />
+        <link rel="canonical" href="https://hvacexperts.com/user/my-appointments" />
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
+      </Helmet>
+
       <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, color: 'text.primary' }}>
         My Appointments
       </Typography>
-      {appointments.length === 0 ? (
+      {error ? (
+        <Typography variant="body1" color="error.main">
+          {error}
+        </Typography>
+      ) : !user?.userData ? (
+        <Typography variant="body1" color="text.secondary">
+          Please log in to view your appointments.
+        </Typography>
+      ) : appointments.length === 0 ? (
         <Typography variant="body1" color="text.secondary">
           No appointments found.
         </Typography>
@@ -226,7 +259,6 @@ function MyAppointments() {
               <Typography variant="body1">
                 <strong>Mobile:</strong> {selectedEngineer.mobile || 'N/A'}
               </Typography>
-              
             </Box>
           ) : (
             <Typography variant="body1" color="text.secondary">

@@ -6,7 +6,6 @@ import {
   Grid, 
   Card, 
   CardContent,
-  Icon,
   Paper
 } from '@mui/material';
 import {
@@ -17,6 +16,7 @@ import {
   Timer as EmergencyIcon,
   ThumbUp as SatisfactionIcon
 } from '@mui/icons-material';
+import { Helmet } from 'react-helmet-async'; // Added for SEO
 
 const features = [
   {
@@ -54,6 +54,36 @@ const features = [
 function About() {
   return (
     <Container maxWidth="lg" sx={{ py: 8 }}>
+      {/* SEO Metadata */}
+      <Helmet>
+        <title>About HVAC Experts - Trusted AC Repair Since 2005</title>
+        <meta
+          name="description"
+          content="Learn about HVAC Experts, your trusted AC repair and maintenance provider with over 15 years of experience. Offering 24/7 emergency services, certified technicians, and 100% satisfaction guarantee."
+        />
+        <meta
+          name="keywords"
+          content="HVAC, AC repair, air conditioning services, expert technicians, 24/7 emergency service, licensed HVAC, HVAC Experts"
+        />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:title" content="About HVAC Experts - Trusted AC Repair Since 2005" />
+        <meta
+          property="og:description"
+          content="Learn about HVAC Experts, your trusted AC repair and maintenance provider with over 15 years of experience. Offering 24/7 emergency services, certified technicians, and 100% satisfaction guarantee."
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://hvacexperts.com/about" />
+        <meta property="og:image" content="https://hvacexperts.com/assets/hvac-about-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="About HVAC Experts - Trusted AC Repair Since 2005" />
+        <meta
+          name="twitter:description"
+          content="Learn about HVAC Experts, your trusted AC repair and maintenance provider with over 15 years of experience. Offering 24/7 emergency services, certified technicians, and 100% satisfaction guarantee."
+        />
+        <meta name="twitter:image" content="https://hvacexperts.com/assets/hvac-about-image.jpg" />
+        <link rel="canonical" href="https://hvacexperts.com/about" />
+      </Helmet>
+
       {/* Hero Section */}
       <Box sx={{ mb: 8, textAlign: 'center' }}>
         <Typography variant="h3" component="h1" gutterBottom color="primary">
@@ -129,6 +159,7 @@ function About() {
           </Grid>
         </Grid>
       </Box>
+
       {/* Contact Information */}
       <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
         <Typography variant="h5" gutterBottom color="primary">
@@ -144,4 +175,4 @@ function About() {
   );
 }
 
-export default About; 
+export default About;

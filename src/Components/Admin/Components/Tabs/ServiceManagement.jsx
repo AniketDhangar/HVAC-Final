@@ -377,7 +377,7 @@ const ServiceManagement = () => {
           </Button>
         </DialogActions>
       </Dialog>
-７
+
       <Dialog open={openDelete} onClose={handleDeleteClose} maxWidth="xs" fullWidth>
         <DialogTitle>Delete Service?</DialogTitle>
         <DialogContent>

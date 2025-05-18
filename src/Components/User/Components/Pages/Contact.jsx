@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import toast, { Toaster } from "react-hot-toast";
+import { Helmet } from 'react-helmet-async'; // Added for SEO
 
 const REACT_BASE_URL = "http://localhost:3000" 
 
@@ -31,10 +32,9 @@ const Contact = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const responce = await axios.post(`${REACT_BASE_URL}/addcontacts`,
-        formData)
-      console.log(responce.data)
-      toast.success("you request is sent successfully");
+      const response = await axios.post(`${REACT_BASE_URL}/addcontacts`, formData);
+      console.log(response.data);
+      toast.success("Your request was sent successfully");
       setFormData({
         name: '',
         email: '',
@@ -42,15 +42,69 @@ const Contact = () => {
         message: ''
       });
     } catch (error) {
-      toast.error("Failed to submit form")
+      toast.error("Failed to submit form");
       console.error(error);
     }
+  };
 
-  
+  // Structured data for LocalBusiness
+  const contactStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "HVAC Experts",
+    "telephone": "(555) 123-4567",
+    "email": "service@hvacexperts.com",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "123 Cooling Street",
+      "addressLocality": "AC City",
+      "addressRegion": "State",
+      "postalCode": "12345"
+    },
+    "url": "https://hvacexperts.com/contact",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "Customer Service",
+      "telephone": "(555) 123-4567",
+      "email": "service@hvacexperts.com"
+    }
   };
 
   return (
     <Container maxWidth="md">
+      {/* SEO Metadata */}
+      <Helmet>
+        <title>Contact HVAC Experts - Get in Touch for AC Services</title>
+        <meta
+          name="description"
+          content="Contact HVAC Experts for AC repair, maintenance, or inquiries. Reach us via phone, email, or our online form for fast, reliable service."
+        />
+        <meta
+          name="keywords"
+          content="contact HVAC, AC repair contact, HVAC Experts, AC service inquiry, customer service HVAC"
+        />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:title" content="Contact HVAC Experts - Get in Touch for AC Services" />
+        <meta
+          property="og:description"
+          content="Contact HVAC Experts for AC repair, maintenance, or inquiries. Reach us via phone, email, or our online form for fast, reliable service."
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://hvacexperts.com/contact" />
+        <meta property="og:image" content="https://hvacexperts.com/assets/hvac-contact-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Contact HVAC Experts - Get in Touch for AC Services" />
+        <meta
+          name="twitter:description"
+          content="Contact HVAC Experts for AC repair, maintenance, or inquiries. Reach us via phone, email, or our online form for fast, reliable service."
+        />
+        <meta name="twitter:image" content="https://hvacexperts.com/assets/hvac-contact-image.jpg" />
+        <link rel="canonical" href="https://hvacexperts.com/contact" />
+        <script type="application/ld+json">
+          {JSON.stringify(contactStructuredData)}
+        </script>
+      </Helmet>
+
       <Box sx={{ my: 4 }}>
         <Toaster position="top-right" />
         <Typography variant="h3" component="h1" align="center" gutterBottom>
@@ -70,6 +124,7 @@ const Contact = () => {
               onChange={handleChange}
               required
               variant="outlined"
+              aria-label="Enter your full name"
             />
 
             <TextField
@@ -81,6 +136,7 @@ const Contact = () => {
               onChange={handleChange}
               required
               variant="outlined"
+              aria-label="Enter your email address"
             />
 
             <TextField
@@ -91,6 +147,7 @@ const Contact = () => {
               onChange={handleChange}
               required
               variant="outlined"
+              aria-label="Enter the subject of your message"
             />
 
             <TextField
@@ -103,6 +160,7 @@ const Contact = () => {
               multiline
               rows={5}
               variant="outlined"
+              aria-label="Enter your message or inquiry"
             />
 
             <Button

@@ -15,6 +15,7 @@ import {
   Stack,
 } from '@mui/material';
 import toast, { Toaster } from "react-hot-toast";
+import { Helmet } from 'react-helmet-async'; // Added for SEO
 
 const REACT_BASE_URL = "http://localhost:3000"
 
@@ -88,6 +89,36 @@ const AppointmentForm = () => {
 
   return (
     <Container component="main" maxWidth="md">
+      {/* SEO Metadata */}
+      <Helmet>
+        <title>Book AC Service Appointment - HVAC Experts</title>
+        <meta
+          name="description"
+          content="Schedule your AC repair or maintenance appointment with HVAC Experts. Fast, reliable 24/7 service with certified technicians. Book now for expert solutions."
+        />
+        <meta
+          name="keywords"
+          content="book AC service, HVAC appointment, AC repair booking, HVAC Experts, 24/7 AC service, certified technicians"
+        />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:title" content="Book AC Service Appointment - HVAC Experts" />
+        <meta
+          property="og:description"
+          content="Schedule your AC repair or maintenance appointment with HVAC Experts. Fast, reliable 24/7 service with certified technicians. Book now for expert solutions."
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://hvacexperts.com/book-appointment" />
+        <meta property="og:image" content="https://hvacexperts.com/assets/hvac-appointment-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Book AC Service Appointment - HVAC Experts" />
+        <meta
+          name="twitter:description"
+          content="Schedule your AC repair or maintenance appointment with HVAC Experts. Fast, reliable 24/7 service with certified technicians. Book now for expert solutions."
+        />
+        <meta name="twitter:image" content="https://hvacexperts.com/assets/hvac-appointment-image.jpg" />
+        <link rel="canonical" href="https://hvacexperts.com/book-appointment" />
+      </Helmet>
+
       <Toaster position="top-right" />
       <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
         <Typography variant="h4" align="center" gutterBottom>
@@ -149,7 +180,7 @@ const AppointmentForm = () => {
                       {service.serviceName}
                     </MenuItem>
                   ))}
-                  <MenuItem value="other">Other</MenuItem>
+                  <MenuItem value="Other">Other</MenuItem>
                 </Select>
               </FormControl>
             </Grid>

@@ -16,8 +16,7 @@ import {
   useMediaQuery,
   Typography
 } from '@mui/material';
-
-// Icons
+import { Helmet } from 'react-helmet-async'; // Added for structured data
 import MenuIcon from '@mui/icons-material/Menu';
 import HomeIcon from '@mui/icons-material/Home';
 import InfoIcon from '@mui/icons-material/Info';
@@ -26,18 +25,6 @@ import ContactMailIcon from '@mui/icons-material/ContactMail';
 import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
 
 const drawerWidth = 280;
-
-// const menuItems = [
-//   { text: 'Home', icon: <HomeIcon />, path: 'home' },
-//   { text: 'About Us', icon: <InfoIcon />, path: 'about' },
-//   { text: 'Our Services', icon: <CleaningServicesIcon />, path: 'services' },
-//   { text: 'Our Blogs', icon: <BookTwoToneIcon />, path: 'blogs' },
-//   { text: 'Contact Us ', icon: <ContactMailIcon />, path: 'contact' },
-//   { text: 'Profile', icon: <ContactMailIcon />, path: 'profile' },
-
-
-// ];
-
 
 const menuItems = [
   { text: 'Home', icon: <HomeIcon />, path: '/user/home' },
@@ -70,8 +57,21 @@ function ResponsiveDrawer() {
     navigate('/user/home');
   };
 
+  // Structured data for SiteNavigationElement
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "SiteNavigationElement",
+    "name": "Main Navigation",
+    "url": "https://hvacexperts.com",
+    "potentialAction": menuItems.map(item => ({
+      "@type": "NavigateAction",
+      "name": item.text,
+      "url": `https://hvacexperts.com${item.path}`
+    }))
+  };
+
   const drawer = (
-    <Box sx={{ mt: 2, position: 'sticky', width: drawerWidth }}>
+    <Box sx={{ mt: 2, position: 'sticky', width: drawerWidth }} role="navigation" aria-label="Mobile navigation menu">
       <List>
         {menuItems.map((item) => (
           <ListItem key={item.text} disablePadding>
@@ -101,6 +101,7 @@ function ResponsiveDrawer() {
                   },
                 },
               }}
+              aria-label={`Navigate to ${item.text} page`}
             >
               <ListItemIcon
                 sx={{
@@ -109,6 +110,7 @@ function ResponsiveDrawer() {
                     : theme.palette.primary.main,
                   transition: 'color 0.3s ease-in-out',
                 }}
+                aria-hidden="true"
               >
                 {item.icon}
               </ListItemIcon>
@@ -127,8 +129,15 @@ function ResponsiveDrawer() {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+      {/* Structured Data */}
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify(structuredData)}
+        </script>
+      </Helmet>
+
       {/* AppBar */}
-      <AppBar position="fixed">
+      <AppBar position="fixed" sx={{ zIndex: theme.zIndex.drawer + 1 }}>
         <Toolbar sx={{
           backgroundColor: theme.palette.background.paper,
           borderBottom: `1px solid ${theme.palette.divider}`,
@@ -136,7 +145,7 @@ function ResponsiveDrawer() {
         }}>
           <IconButton
             color="primary"
-            aria-label="open drawer"
+            aria-label="Open mobile navigation drawer"
             edge="start"
             onClick={handleDrawerToggle}
             sx={{ display: { sm: 'none' } }}
@@ -145,7 +154,6 @@ function ResponsiveDrawer() {
           </IconButton>
           <Button
             variant="h1"
-
             onClick={handleClick}
             sx={{
               flexGrow: 1,
@@ -153,21 +161,18 @@ function ResponsiveDrawer() {
               fontWeight: 'bold',
               fontSize: '2rem',
               height: '100%',
-              // padding: '16px 250px',
-              // width: '100%',
-              // bgcolor:'red',
               color: theme.palette.primary.main,
               '&:hover': {
                 color: theme.palette.primary.dark,
-                // color:'white'
               },
             }}
+            aria-label="Navigate to Home page"
           >
-            AC Services
+            HVAC Technical
           </Button>
 
           {/* Desktop Navigation */}
-          <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 2 }}>
+          <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 2 }} role="navigation" aria-label="Desktop navigation menu">
             {menuItems.map((item) => (
               <Button
                 key={item.text}
@@ -189,13 +194,12 @@ function ResponsiveDrawer() {
                       : theme.palette.primary.light,
                     color: location.pathname === item.path
                       ? theme.palette.primary.contrastText
-                      // ? 'white' 
                       : 'white',
-                    // : theme.palette.primary.main,
                   },
                   transition: 'all 0.3s ease-in-out',
                   fontWeight: location.pathname === item.path ? 'bold' : 'normal',
                 }}
+                aria-label={`Navigate to ${item.text} page`}
               >
                 {item.text}
               </Button>
@@ -213,6 +217,7 @@ function ResponsiveDrawer() {
           keepMounted: true,
         }}
         sx={{
+          zIndex:10000,
           display: { xs: 'block', sm: 'none' },
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
@@ -231,7 +236,6 @@ function ResponsiveDrawer() {
           flexGrow: 1,
           p: 3,
           width: '100%',
-          // mt: 8, // Add margin top to account for fixed AppBar
         }}
       >
       </Box>
