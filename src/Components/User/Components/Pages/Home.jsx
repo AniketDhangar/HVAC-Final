@@ -109,7 +109,7 @@ const Home = () => {
         <meta property="og:url" content="https://hvacexperts.com" />
         <meta property="og:image" content="https://hvacexperts.com/assets/hvac-home-image.jpg" />
         <meta name="twitter:card" content="summary_large_image" />
-              <meta name="twitter:title" content=" HVAC Experts - Trusted AC Repair Since 2005" />
+        <meta name="twitter:title" content=" HVAC Experts - Trusted AC Repair Since 2005" />
          <meta name="twitter:title" content="Contact HVAC Experts - Get in Touch for AC Services" />
         {/* <meta name="twitter:title" content="Freshair Technical Systems LLC - Trusted HVAC Contractor" /> */}
         <meta

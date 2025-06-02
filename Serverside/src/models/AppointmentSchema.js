@@ -10,7 +10,7 @@ const AppointmentSchema = new mongoose.Schema(
     assignedEngineer: { type: mongoose.Schema.ObjectId, ref: "User" },
     assignedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // admin who assigned the task
+      ref: "User", 
     },
     deviceBrand: {
       type: String,

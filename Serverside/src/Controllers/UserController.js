@@ -78,7 +78,7 @@ const doLogin = async (req, res) => {
         role: loggedUser.role,
       },
       jwtSecret,
-      { expiresIn: process.env.JWT_EXPIRATION || "1h" }
+      { expiresIn: process.env.JWT_EXPIRATION || "3h" }
     );
 
     // Create refresh token (long-lived)
