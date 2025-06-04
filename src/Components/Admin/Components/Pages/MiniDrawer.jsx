@@ -1,60 +1,79 @@
-import React, { useState, useEffect } from 'react';
-import { styled, useTheme } from '@mui/material/styles';
-import { Box, Drawer, AppBar, Toolbar, Typography, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, CssBaseline, Tooltip, Button, Collapse } from '@mui/material';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { styled } from '@mui/material/styles';
+import {
+  Box,
+  Drawer,
+  AppBar,
+  Toolbar,
+  Typography,
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Tooltip,
+  Collapse,
+} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-import HomeIcon from '@mui/icons-material/Home';
-import InfoIcon from '@mui/icons-material/Info';
+import ArticleIcon from '@mui/icons-material/Article';
 import ContactMailIcon from '@mui/icons-material/ContactMail';
+import BoltIcon from '@mui/icons-material/Bolt';
+import LogoutIcon from '@mui/icons-material/Logout';
+import PeopleIcon from '@mui/icons-material/People';
+import MessageIcon from '@mui/icons-material/Message';
 import BuildIcon from '@mui/icons-material/Build';
 import GroupIcon from '@mui/icons-material/Group';
+import EventIcon from '@mui/icons-material/Event';
 import PersonIcon from '@mui/icons-material/Person';
-import StarIcon from '@mui/icons-material/Star';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import Brightness4Icon from '@mui/icons-material/Brightness4';
-import Brightness7Icon from '@mui/icons-material/Brightness7';
-import BoltIcon from '@mui/icons-material/Bolt';
-import { useDispatch, useSelector } from 'react-redux';
+import BusinessIcon from '@mui/icons-material/Business';
+import FullscreenIcon from '@mui/icons-material/Fullscreen';
+import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { selectUser, logout } from '../../../../Components/Reduxwork/userslice';
-import { Logout } from '@mui/icons-material';
+
 import Dashboard from '../Tabs/Dashboard';
 import AppointmentTable from '../Tabs/AppointmentTable';
-import UserTable from '../Tabs/UserTable';
 import BlogsManagement from '../Tabs/BlogsManagement';
-import ContactIssues from '../Tabs/ContactIssues';
-import ServiceManagement from '../Tabs/ServiceManagement';
 import EngineersList from '../Tabs/EngineersList';
+import UserTable from '../Tabs/UserTable';
+import ServiceManagement from '../Tabs/ServiceManagement';
+import ContactIssues from '../Tabs/ContactIssues';
 import Profile from '../../../Auth/Profile';
 
 const drawerWidth = 240;
 
-const lightTheme = createTheme({ palette: { mode: 'light' } });
-const darkTheme = createTheme({ palette: { mode: 'dark' } });
-
-const DrawerHeader = styled('div')(({ theme }) => ({
+const DrawerHeader = styled('div')(() => ({
   display: 'flex',
-//   alignItems: 'start',
-//   justifyContent: 'center',
-  padding: theme.spacing(0, 1),
-  ...theme.mixins.toolbar,
+  alignItems: 'center',
+  justifyContent: 'flex-end',
+  padding: '0 8px',
+  minHeight: '64px',
 }));
 
-const AppBarStyled = styled(AppBar, { shouldForwardProp: (prop) => prop !== 'open' })(({ theme, open }) => ({
-  zIndex: theme.zIndex.drawer + 1,
-  transition: theme.transitions.create(['margin', 'width'], { easing: theme.transitions.easing.sharp, duration: theme.transitions.duration.leavingScreen }),
+const AppBarStyled = styled(AppBar, {
+  shouldForwardProp: (prop) => prop !== 'open',
+})(({ open }) => ({
+  zIndex: 1201,
+  backgroundColor: '#1976d2',
+  color: '#ffffff',
+  transition: 'margin 0.2s, width 0.2s',
   ...(open && {
     marginLeft: drawerWidth,
     width: `calc(100% - ${drawerWidth}px)`,
-    transition: theme.transitions.create(['margin', 'width'], { easing: theme.transitions.easing.sharp, duration: theme.transitions.duration.enteringScreen }),
+    transition: 'margin 0.2s, width 0.2s',
   }),
 }));
 
-const DrawerStyled = styled(Drawer, { shouldForwardProp: (prop) => prop !== 'open' })(({ theme, open }) => ({
+const DrawerStyled = styled(Drawer, {
+  shouldForwardProp: (prop) => prop !== 'open',
+})(({ open }) => ({
   width: drawerWidth,
   flexShrink: 0,
   whiteSpace: 'nowrap',
@@ -62,79 +81,52 @@ const DrawerStyled = styled(Drawer, { shouldForwardProp: (prop) => prop !== 'ope
   ...(open && {
     '& .MuiDrawer-paper': {
       width: drawerWidth,
-      transition: theme.transitions.create('width', { easing: theme.transitions.easing.sharp, duration: theme.transitions.duration.enteringScreen }),
+      backgroundColor: '#ffffff',
+      color: '#212121',
+      transition: 'width 0.2s',
       overflowX: 'hidden',
     },
   }),
   ...(!open && {
     '& .MuiDrawer-paper': {
-      width: `calc(${theme.spacing(7)} + 1px)`,
-      [theme.breakpoints.up('sm')]: { width: `calc(${theme.spacing(9)} + 1px)` },
-      transition: theme.transitions.create('width', { easing: theme.transitions.easing.sharp, duration: theme.transitions.duration.leavingScreen }),
+      width: '57px',
+      backgroundColor: '#ffffff',
+      color: '#212121',
+      transition: 'width 0.2s',
       overflowX: 'hidden',
     },
   }),
 }));
 
-class ErrorBoundary extends React.Component {
-  state = { hasError: false };
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return <Typography>Something went wrong. Please try again.</Typography>;
-    }
-    return this.props.children;
-  }
-}
-
 export default function MiniDrawer() {
-  const theme = useTheme();
   const navigate = useNavigate();
-  const location = useLocation();
   const dispatch = useDispatch();
-  const user = useSelector(selectUser);
-  const [open, setOpen] = useState(true); // Open drawer by default for visibility
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
-  const [selectedView, setSelectedView] = useState({ type: 'parent', text: 'Dashboard', childIndex: null });
-  const [expanded, setExpanded] = useState({ Appointments: true }); // Expand Appointments by default
+  const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState({});
+  const [selectedView, setSelectedView] = useState({
+    type: 'parent',
+    text: 'Dashboard',
+    childIndex: null,
+  });
+  const [hoverText, setHoverText] = useState(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Sync selectedView with URL
-  useEffect(() => {
-    const pathParts = location.pathname.split('/').filter(Boolean);
-    const childPath = pathParts[pathParts.length - 1];
-    const basePath = pathParts[pathParts.length - 2] || childPath || 'dashboard';
-
-    const parentItem = menuItems.find(item => item.path === basePath);
-    const childItem = menuItems
-      .filter(item => item.children?.length)
-      .flatMap(item => item.children.map((child, index) => ({ ...child, parentText: item.text, childIndex: index })))
-      .find(child => child.path === childPath);
-
-    console.log('useEffect Debug:', { path: location.pathname, basePath, childPath, parentItem, childItem });
-
-    if (childItem) {
-      setSelectedView({ type: 'child', text: childItem.parentText, childIndex: childItem.childIndex });
-      setExpanded({ [childItem.parentText]: true });
-    } else if (parentItem) {
-      setSelectedView({ type: 'parent', text: parentItem.text, childIndex: null });
-      setExpanded(parentItem.children.length ? { [parentItem.text]: true } : {});
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen()
+        .then(() => setIsFullscreen(true))
+        .catch(err => console.error('Fullscreen error:', err));
     } else {
-      setSelectedView({ type: 'parent', text: 'Dashboard', childIndex: null });
-      setExpanded({ Appointments: true });
-      navigate('dashboard', { replace: true });
+      document.exitFullscreen()
+        .then(() => setIsFullscreen(false))
+        .catch(err => console.error('Exit fullscreen error:', err));
     }
-  }, [location.pathname, navigate]);
+  };
 
   const handleDrawerOpen = () => setOpen(true);
   const handleDrawerClose = () => setOpen(false);
-
-  const handleToggle = (text) => () => {
+  const handleToggle = (text) => () =>
     setExpanded((prev) => ({ ...prev, [text]: !prev[text] }));
-  };
 
   const handleLogout = () => {
     dispatch(logout());
@@ -145,196 +137,243 @@ export default function MiniDrawer() {
   };
 
   const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: 'dashboard', component: Dashboard, children: [] },
     {
-      text: 'Appointments',
-      icon: <HomeIcon />,
-      path: 'my-appointments',
+      text: 'Dashboard',
+      icon: <DashboardIcon />,
+      component: Dashboard,
+      children: [],
+    },
+    {
+      text: 'Services Data',
+      icon: <BuildIcon />,
+      component: ServiceManagement,
+      children: [],
+    },
+    {
+      text: 'My Blogs',
+      icon: <ArticleIcon />,
+      component: BlogsManagement,
+      children: [],
+    },
+    {
+      text: 'Team',
+      icon: <GroupIcon />,
+      component: EngineersList,
+      children: [],
+    },
+    {
+      text: 'Appointments Data',
+      icon: <EventIcon />,
       component: AppointmentTable,
       children: [
-        { text: 'Users', icon: <StarIcon />, path: 'users', component: UserTable },
+        { text: 'My Appointments', icon: <BusinessIcon />, component: AppointmentTable },
+        { text: 'Clients', icon: <PeopleIcon />, component: UserTable },
       ],
     },
-    { text: 'Blogs', icon: <InfoIcon />, path: 'my-blogs', component: BlogsManagement, children: [] },
-    { text: 'Contacts', icon: <ContactMailIcon />, path: 'my-contacts', component: ContactIssues, children: [] },
-    { text: 'Services', icon: <BuildIcon />, path: 'my-services', component: ServiceManagement, children: [] },
-    { text: 'Engineers', icon: <GroupIcon />, path: 'my-engineers', component: EngineersList, children: [] },
-    { text: 'Profile', icon: <PersonIcon />, path: 'my-profile', component: Profile, children: [] },
+    {
+      text: 'Contact',
+      icon: <ContactMailIcon />,
+      component: ServiceManagement,
+      children: [
+        { text: 'Messages', icon: <MessageIcon />, component: ContactIssues },
+      ],
+    },
+    {
+      text: 'Profile',
+      icon: <PersonIcon />,
+      component: Profile,
+      children: [],
+    },
   ];
 
-  const matched = menuItems.find(item => item.text === selectedView.text) || menuItems[0];
-
-  // Debug rendering
-  console.log('Rendering Debug:', { selectedView, matched, childComponent: matched.children?.[selectedView.childIndex]?.component });
+  const matched = menuItems.find((item) => item.text === selectedView.text) || menuItems[0];
+  const SelectedComponent =
+    selectedView.type === 'parent'
+      ? matched.component
+      : matched.children?.[selectedView.childIndex]?.component ||
+        (() => <Typography color="#212121">No content available</Typography>);
 
   return (
-    <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
-      <Box sx={{ display: 'flex',  }}>
-        <CssBaseline />
-        <AppBarStyled position="fixed" open={open}>
-          <Toolbar>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f5f5f5' }}>
+      <AppBarStyled position="fixed" open={open}>
+        <Toolbar
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <IconButton
               color="inherit"
               aria-label="open drawer"
               onClick={handleDrawerOpen}
               edge="start"
-              sx={{ mr: 3.5, ...(open && { display: 'none' }) }}
+              sx={{ mr: 2, ...(open && { display: 'none' }) }}
             >
               <MenuIcon />
             </IconButton>
-            <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
-              {selectedView.type === 'parent' ? selectedView.text : `${selectedView.text} - ${matched.children?.[selectedView.childIndex]?.text || 'Child'}`}
+            <Typography variant="h6" noWrap sx={{ color: '#ffffff' }}>
+              {hoverText ||
+                `${selectedView.text}${
+                  selectedView.type === 'child' ? ` - ${matched.children?.[selectedView.childIndex]?.text}` : ''
+                }`}
             </Typography>
-            <Box sx={{ display: 'flex', px: 2, flexGrow: 1 }}>
-              <BoltIcon sx={{ mr: 1 }} />
-              <Typography variant="h6" fontWeight={700}>
-                DevDash
-              </Typography>
-            </Box>
-            <Button
-              variant="contained"
-              startIcon={<Logout />}
-              onClick={handleLogout}
-              sx={{
-                background: 'linear-gradient(45deg, #1976d2, #1565c0)',
-                color: 'common.white',
-                py: { xs: 0.5, sm: 1 },
-                px: { xs: 1.5, sm: 2 },
-                mx: 1,
-                boxShadow: 2,
-                '&:hover': { background: 'linear-gradient(45deg, #1565c0, #1976d2)', boxShadow: 4, transform: 'scale(1.03)' },
-                '&:active': { transform: 'scale(0.97)' },
-                '&:focus': { outline: '2px solid #1565c0', outlineOffset: '2px' },
-              }}
-              aria-label="Log out"
-            >
-              <Typography variant="body2" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                Logout
-              </Typography>
-            </Button>
-            <Tooltip title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>
-              <IconButton
-                color="inherit"
-                onClick={() => {
-                  setDarkMode(!darkMode);
-                  localStorage.setItem('theme', !darkMode ? 'dark' : 'light');
-                }}
-                aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-                sx={{ ml: 'auto' }}
-              >
-                {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
-              </IconButton>
-            </Tooltip>
-          </Toolbar>
-        </AppBarStyled>
-
-        <DrawerStyled variant="permanent" open={open}>
-          <DrawerHeader>
-            <IconButton onClick={handleDrawerClose} aria-label="close drawer">
-              {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <BoltIcon sx={{ mr: 1, color: '#ffffff' }} />
+            <Typography variant="h6" fontWeight="bold" sx={{ color: '#ffffff' }}>
+              HVAC- Technical
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <IconButton color="inherit" onClick={toggleFullscreen} aria-label="toggle fullscreen">
+              {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
             </IconButton>
-          </DrawerHeader>
-          <List>
-            {menuItems.map(({ text, icon, path, children }) => (
-              <div key={text}>
-                <Tooltip title={open ? '' : text} placement="right" disableInteractive>
-                  <ListItem disablePadding sx={{ display: 'block' }}>
-                    <ListItemButton
-                      onClick={() => {
-                        setSelectedView({ type: 'parent', text, childIndex: null });
-                        navigate(path);
-                        if (!open) setOpen(true);
-                        if (open && children.length > 0) handleToggle(text)();
-                      }}
-                      aria-label={`Navigate to ${text}`}
-                      sx={{ minHeight: 48, justifyContent: open ? 'initial' : 'center' }}
-                    >
-                      <ListItemIcon
-                        sx={{
-                          minWidth: 0,
-                          mr: open ? 2 : 'auto',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          '& .MuiSvgIcon-root': { fontSize: open ? '1.5rem' : '2rem' },
-                        }}
-                      >
-                        {icon}
-                      </ListItemIcon>
-                      <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
-                      {open && children.length > 0 && (
-                        <IconButton edge="end" onClick={(e) => { e.stopPropagation(); handleToggle(text)(); }}>
-                          {expanded[text] ? <ExpandLess /> : <ExpandMore />}
-                        </IconButton>
-                      )}
-                    </ListItemButton>
-                  </ListItem>
-                </Tooltip>
-                {open && children.length > 0 && (
-                  <Collapse in={expanded[text]} timeout="auto" unmountOnExit>
-                    <List component="div" disablePadding>
-                      {children.map((child, index) => (
-                        <ListItem key={child.text} disablePadding sx={{ pl: 4 }}>
-                          <ListItemButton
-                            onClick={() => {
-                              setSelectedView({ type: 'child', text, childIndex: index });
-                              navigate(`my-appointments/${child.path}`);
-                              console.log('Navigating to child:', { text, childIndex: index, path: `my-appointments/${child.path}` });
-                            }}
-                            aria-label={`Navigate to ${child.text}`}
-                          >
-                            <ListItemIcon sx={{ minWidth: 0, mr: 2, '& .MuiSvgIcon-root': { fontSize: '1.25rem' } }}>
-                              {child.icon}
-                            </ListItemIcon>
-                            <ListItemText primary={child.text} />
-                          </ListItemButton>
-                        </ListItem>
-                      ))}
-                    </List>
-                  </Collapse>
-                )}
-              </div>
-            ))}
-          </List>
-        </DrawerStyled>
+          </Box>
+        </Toolbar>
+      </AppBarStyled>
 
-        <Box
-          component="main"
-          sx={{
-            flexGrow: 1,
-            width: open ? `calc(100% - ${drawerWidth}px)` : `calc(100% - ${theme.spacing(7)} + 1px)`,
-            height: { xs: `calc(100vh - ${theme.mixins.toolbar['@media (min-width:0px)']?.minHeight}px)`, sm: `calc(100vh - ${theme.mixins.toolbar.minHeight}px)` },
-            marginTop: { xs: theme.mixins.toolbar['@media (min-width:0px)']?.minHeight, sm: theme.mixins.toolbar.minHeight },
-            overflow: 'auto',
-            bgcolor: 'background.default',
-          }}
-        >
-          <ErrorBoundary>
-            {selectedView.type === 'parent' ? (
-              (() => {
-                const Component = matched.component;
-                return <Component 
-                // sx={{ width: '100%', height: '100%' }}
-                 />;
-              })()
-            ) : (
-              <Box
-            //    sx={{ width: '100%', height: '100%', p: 2 }}
-               >
-                {matched.children?.[selectedView.childIndex]?.component ? (
-                  (() => {
-                    const ChildComponent = matched.children[selectedView.childIndex].component;
-                    return <ChildComponent
-                    //  sx={{ width: '100%', height: '100%' }} 
-                     />;
-                  })()
-                ) : (
-                  <Typography color="error">No child content available for {selectedView.text} - Users</Typography>
-                )}
-              </Box>
-            )}
-          </ErrorBoundary>
-        </Box>
+      <DrawerStyled variant="permanent" open={open}>
+        <DrawerHeader>
+          <IconButton onClick={handleDrawerClose} aria-label="close drawer">
+            <ChevronLeftIcon sx={{ color: '#212121' }} />
+          </IconButton>
+        </DrawerHeader>
+        <List sx={{ flexGrow: '1', display: 'flex', flexDirection: 'column', height: 'calc(100% - 64px)' }}>
+          {menuItems.map(({ text, icon, children }) => (
+            <div key={text}>
+              <Tooltip
+                title={
+                  !open && (
+                    <Box sx={{  bgcolor: '#ffffff', borderRadius: 1, color: '#212121' }}>
+                      <Typography sx={{ fontWeight: 'bold', color: '#212121' }}>{text}</Typography>
+                      {children?.map((child, index) => (
+                        <ListItemButton
+                          key={index}
+                          sx={{ p: 1, borderRadius: 1, color: '#212121' }}
+                          onClick={() => {
+                            setOpen(true);
+                            setSelectedView({ type: 'child', text, childIndex: index });
+                          }}
+                        >
+                          <ListItemIcon sx={{ minWidth: 0, mr: 1, '& .MuiSvgIcon-root': { fontSize: '1.25rem', color: '#1976d2' } }}>
+                            {child.icon}
+                          </ListItemIcon>
+                          <ListItemText primary={child.text} />
+                        </ListItemButton>
+                      ))}
+                    </Box>
+                  )
+                }
+                placement="right"
+                onOpen={() => !open && setHoverText(text)}
+                onClose={() => setHoverText(null)}
+              >
+                <ListItem disablePadding>
+                  <ListItemButton
+                    selected={selectedView.text === text && selectedView.type === 'parent'}
+                    onClick={() => {
+                      if (!open) setOpen(true);
+                      setSelectedView({ type: 'parent', text, childIndex: null });
+                      if (open && children?.length > 0) handleToggle(text)();
+                    }}
+                    sx={{
+                      minHeight: 48,
+                      justifyContent: open ? 'initial' : 'center',
+                      px: 2.5,
+                      color: '#212121',
+                      '&.Mui-selected': {
+                        bgcolor: '#e3f2fd',
+                        '&:hover': { bgcolor: '#bbdefb' },
+                      },
+                    }}
+                  >
+                    <ListItemIcon
+                      sx={{
+                        minWidth: 0,
+                        mr: open ? 2 : 'auto',
+                        '& .MuiSvgIcon-root': { fontSize: open ? '1.5rem' : '1.75rem', color: '#1976d2' },
+                      }}
+                    >
+                      {icon}
+                    </ListItemIcon>
+                    <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
+                    {open && children?.length > 0 && (
+                      <IconButton
+                        edge="end"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggle(text)();
+                        }}
+                        sx={{ color: '#1976d2' }}
+                      >
+                        {expanded[text] ? <ExpandLess /> : <ExpandMore />}
+                      </IconButton>
+                    )}
+                  </ListItemButton>
+                </ListItem>
+              </Tooltip>
+              {open && children?.length > 0 && (
+                <Collapse in={expanded[text]} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding>
+                    {children.map((child, index) => (
+                      <ListItem key={index} disablePadding sx={{ pl: 4 }}>
+                        <ListItemButton
+                          selected={selectedView.text === text && selectedView.type === 'child' && selectedView.childIndex === index}
+                          onClick={() => setSelectedView({ type: 'child', text, childIndex: index })}
+                          sx={{
+                            color: '#212121',
+                            '&.Mui-selected': {
+                              bgcolor: '#e3f2fd',
+                              '&:hover': { bgcolor: '#bbdefb' },
+                            },
+                          }}
+                        >
+                          <ListItemIcon sx={{ minWidth: 0, mr: 2, '& .MuiSvgIcon-root': { fontSize: '1.25rem', color: '#1976d2' } }}>
+                            {child.icon}
+                          </ListItemIcon>
+                          <ListItemText primary={child.text} />
+                        </ListItemButton>
+                      </ListItem>
+                    ))}
+                  </List>
+                </Collapse>
+              )}
+            </div>
+          ))}
+          <ListItem disablePadding sx={{ mt: 'auto' }}>
+            <ListItemButton
+              onClick={handleLogout}
+              sx={{ justifyContent: open ? 'initial' : 'center', px: 2.5, color: '#212121' }}
+            >
+              <ListItemIcon
+                sx={{
+                  minWidth: 0,
+                  mr: open ? 2 : 'auto',
+                  '& .MuiSvgIcon-root': { fontSize: open ? '1.5rem' : '1.75rem', color: '#1976d2' },
+                }}
+              >
+                <LogoutIcon />
+              </ListItemIcon>
+              <ListItemText primary="Logout" sx={{ opacity: open ? 1 : 0 }} />
+            </ListItemButton>
+          </ListItem>
+        </List>
+      </DrawerStyled>
+
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          // p: 3,
+          transition: 'margin 0.2s',
+          bgcolor: '#f5f5f5',
+        }}
+      >
+        <DrawerHeader />
+        <SelectedComponent />
       </Box>
-    </ThemeProvider>
+    </Box>
   );
 }
