@@ -21,7 +21,7 @@ import toast, { Toaster } from "react-hot-toast";
 
 const REACT_BASE_URL = "http://localhost:3000" 
 
-const SignUp = () => {
+const Signup = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
@@ -332,4 +332,4 @@ const SignUp = () => {
   );
 };
 
-export default SignUp;
+export default Signup;
