@@ -23,7 +23,7 @@ import { Edit as EditIcon } from '@mui/icons-material';
 import Loader from '../Auth/Loader'
 
 
-const REACT_BASE_URL = "http://localhost:3000" 
+const REACT_BASE_URL = "https://hvac-final.onrender.com" 
 
 const AppointmentDetails = () => {
   const { id } = useParams(); // Get appointment ID from route

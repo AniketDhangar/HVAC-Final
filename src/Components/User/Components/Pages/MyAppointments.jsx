@@ -6,7 +6,7 @@ import Loader from '../../../Auth/Loader';
 import { styled } from '@mui/material/styles';
 import { Helmet } from 'react-helmet-async'; // Added for SEO
 
-const REACT_BASE_URL = "http://localhost:3000"
+const REACT_BASE_URL = "https://hvac-final.onrender.com"
 
 const StyledCard = styled(Card)(({ theme }) => ({
   borderRadius: theme.spacing(1),

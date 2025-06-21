@@ -17,7 +17,7 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import { Helmet } from 'react-helmet-async'; // Added for SEO
 
-const REACT_BASE_URL = "http://localhost:3000"
+const REACT_BASE_URL = "https://hvac-final.onrender.com"
 
 const AppointmentForm = () => {
   const [formData, setFormData] = useState({
