@@ -17,7 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 const COLORS = ['#4CAF50', '#2196F3', '#FFC107', '#F44336', '#9C27B0', '#FF9800'];
-const REACT_BASE_URL =  "http://localhost:3000";
+const REACT_BASE_URL =  "https://hvac-final.onrender.com";
 
 const Dashboard = () => {
   const theme = useTheme();

@@ -22,7 +22,7 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import toast, { Toaster } from "react-hot-toast";
 
 
-const REACT_BASE_URL = "http://localhost:3000" 
+const REACT_BASE_URL = "https://hvac-final.onrender.com" 
 
 const UserTable = () => {
     const [appointments, setAppointments] = useState([]);

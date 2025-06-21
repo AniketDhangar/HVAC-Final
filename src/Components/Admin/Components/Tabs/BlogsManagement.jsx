@@ -32,7 +32,7 @@ import {
 } from "@mui/icons-material";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
-const REACT_BASE_URL = "http://localhost:3000" 
+const REACT_BASE_URL = "https://hvac-final.onrender.com" 
 
 const BlogsManagement = () => {
   const [blogs, setBlogs] = useState([]);

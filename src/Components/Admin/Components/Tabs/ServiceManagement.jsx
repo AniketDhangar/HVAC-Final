@@ -8,7 +8,7 @@ import { Edit as EditIcon, Delete as DeleteIcon, Search as SearchIcon, ArrowUpwa
 import axios from 'axios';
 import toast, { Toaster } from "react-hot-toast";
 
-const REACT_BASE_URL = "http://localhost:3000";
+const REACT_BASE_URL = "https://hvac-final.onrender.com";
 
 const ServiceManagement = () => {
   const [services, setServices] = useState([]);

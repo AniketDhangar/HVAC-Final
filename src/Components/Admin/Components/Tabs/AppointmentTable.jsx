@@ -14,7 +14,7 @@ import {
 } from "@mui/icons-material";
 axios.defaults.withCredentials = true;
 
-const REACT_BASE_URL = "http://localhost:3000" 
+const REACT_BASE_URL = "https://hvac-final.onrender.com" 
 
 const AppointmentTable = () => {
   const [appointments, setAppointments] = useState([]);
