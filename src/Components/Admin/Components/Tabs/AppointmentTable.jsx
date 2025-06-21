@@ -12,6 +12,8 @@ import {
   Search as SearchIcon,
   Sort as SortIcon
 } from "@mui/icons-material";
+axios.defaults.withCredentials = true;
+
 const REACT_BASE_URL = "http://localhost:3000" 
 
 const AppointmentTable = () => {
@@ -47,7 +49,7 @@ const AppointmentTable = () => {
       setAppointmentsLoading(true);
       const { data } = await axios.get(
         `${REACT_BASE_URL}/getappoinments`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } , withCredentials: true }
       );
       console.log("Appointments data:", data.appointments);
       const list = (data.appointments || []).map(app => ({

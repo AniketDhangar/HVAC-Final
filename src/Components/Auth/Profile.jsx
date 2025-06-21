@@ -131,7 +131,7 @@ const Profile = () => {
     try {
       const response = await axios.put(`${REACT_BASE_URL}/users`, reqBody, {
         headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
-      });
+      },{ withCredentials: true });
       console.log('Backend response:', response.data); // Debug log
       toast.success(response.data.message || 'Profile updated successfully');
 
