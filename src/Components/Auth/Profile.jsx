@@ -18,7 +18,7 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { logout, updateUserData } from '../Reduxwork/userSlice';
+import { logout, updateUserData } from '../Reduxwork/userslice.js';
 import Loader from '../Auth/Loader';
 import EditSharpIcon from '@mui/icons-material/EditSharp';
 import axios from 'axios';
