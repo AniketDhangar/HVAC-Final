@@ -24,7 +24,7 @@ app.use(helmet())
 
 // Middleware
 app.use(cors({
-  origin: 'https://hvac-technical.netlify.app/',
+  origin: 'https://hvac-technical.netlify.app',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
