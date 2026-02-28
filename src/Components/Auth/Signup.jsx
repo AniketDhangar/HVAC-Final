@@ -19,7 +19,7 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 import toast, { Toaster } from "react-hot-toast";
 
 
-const REACT_BASE_URL =  "http://localhost:3000" || "https://hvac-final.onrender.com"
+const REACT_BASE_URL =   "https://hvac-final.onrender.com"
 
 const Signup = () => {
   const navigate = useNavigate();
