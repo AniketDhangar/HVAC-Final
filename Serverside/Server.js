@@ -20,25 +20,25 @@ dotenv.config();
 
 // Connect to database
 connectDB();
-app.use(helmet())
 
-// Middleware
-app.use(cors({
-  origin: 'https://hvac-technical.netlify.app',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
 
-app.use(bodyParser.json());
+app.use(helmet());
+
+app.use(
+  cors({
+    origin:[ "http://localhost:5173", "https://hvac-final.onrender.com"],
+    credentials: true,
+  })
+);
+
+app.use(express.json());
 app.use(cookieParser());
+
+
 
 // Serve static files from Uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'Uploads')));
 
-
-
-// Routes
 app.use(router);
 
 

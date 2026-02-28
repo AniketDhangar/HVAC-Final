@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { User } from "../models/UserSchema.js";
 import dotenv from "dotenv";
+import {User} from "../Models/UserSchema.js";
 
 // Load environment variables
 dotenv.config();
@@ -110,7 +110,7 @@ const doLogin = async (req, res) => {
       loggedUser: responseUser,
     });
   } catch (error) {
-    console.error("Login error:", error);
+    console.log("Login error:", error);
     return res.status(500).json({
       success: false,
       message: error.message || "Internal server error",

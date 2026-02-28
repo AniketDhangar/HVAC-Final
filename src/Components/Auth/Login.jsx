@@ -18,7 +18,8 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setUser } from '../Reduxwork/userslice';
 
-const REACT_BASE_URL = "https://hvac-final.onrender.com" 
+const REACT_BASE_URL =  "http://localhost:3000" ||"https://hvac-final.onrender.com"
+
 
 const LoginForm = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -28,6 +29,8 @@ const LoginForm = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  console.log(REACT_BASE_URL);
+
 
   const validateForm = () => {
     const errors = {};
@@ -59,9 +62,9 @@ const LoginForm = () => {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) {
-      return;
-    }
+    // if (!validateForm()) {
+    //   return;
+    // }
 
     setAuthStatus({ loading: true, errorMsg: '' });
 
