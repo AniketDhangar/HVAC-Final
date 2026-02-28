@@ -26,7 +26,7 @@ app.use(helmet());
 
 app.use(
   cors({
-    origin:[ "http://localhost:5173", "https://hvac-final.onrender.com", "https://hvac-technical.netlify.app/"],
+    origin:[ "http://localhost:5173", "https://hvac-final.onrender.com", "https://hvac-technical.netlify.app"],
     credentials: true,
   })
 );
